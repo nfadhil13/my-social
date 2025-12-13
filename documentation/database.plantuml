@@ -1,0 +1,56 @@
+@startuml mini_social_app_database
+hide circle
+skinparam linetype ortho
+
+entity users {
+  +id : uuid <<PK>>
+  --
+  email : varchar <<unique>>
+  password_hash : varchar
+  role : varchar
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity profiles {
+  +id : uuid <<PK>>
+  --
+  user_id : uuid <<FK>>
+  bio : text
+  avatar_file_id : uuid <<FK>>
+  thumbnail_file_id : uuid <<FK>>
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity posts {
+  +id : uuid <<PK>>
+  --
+  author_id : uuid <<FK>>
+  content_json : json
+  image_file_id : uuid <<FK>>
+  deleted_at : timestamp
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity files {
+  +id : uuid <<PK>>
+  --
+  owner_user_id : uuid <<FK>>
+  type : varchar
+  path : varchar
+  mime_type : varchar
+  size : int
+  created_at : timestamp
+}
+
+users ||--|| profiles : "has one"
+users ||--o{ posts : "writes"
+users ||--o{ files : "owns"
+
+profiles }o--|| files : "avatar"
+profiles }o--|| files : "thumbnail"
+posts }o--|| files : "image"
+
+@enduml
