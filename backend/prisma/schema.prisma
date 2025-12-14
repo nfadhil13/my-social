@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider     = "prisma-client"
+  moduleFormat = "cjs"
+  output       = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id            String   @id @default(uuid()) @db.Uuid()
+  email         String   @unique
+  password_hash String
+  role          Role     @default(USER)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  profile       Profile?
+  posts         Post[]
+
+  @@map("users")
+}
+
+model Profile {
+  id                String   @id @default(uuid()) @db.Uuid()
+  user_id           String   @unique @db.Uuid()
+  bio               String
+  avatar_file_id    String
+  thumbnail_file_id String
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id])
+
+  @@map("profiles")
+}
+
+model Post {
+  id            String    @id @default(uuid())
+  author_id     String    @db.Uuid()
+  content_json  Json      @db.Json()
+  image_file_id String    @db.Uuid()
+  deleted_at    DateTime?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  author User @relation(fields: [author_id], references: [id])
+
+  @@map("posts")
+}
+
+model File {
+  id            String   @id @default(uuid()) @db.Uuid()
+  owner_user_id String   @db.Uuid()
+  type          String
+  path          String
+  mime_type     String
+  size          Int
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@map("files")
+}
