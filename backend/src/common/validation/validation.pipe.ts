@@ -2,7 +2,7 @@ import { PipeTransform } from '@nestjs/common';
 import { ZodType, ZodError } from 'zod';
 import { ValidationException } from './validation.exception';
 
-export class ValidationPipe implements PipeTransform {
+export class ZodValidationPipe implements PipeTransform {
   constructor(private readonly schema: ZodType) {}
   transform(value: any) {
     try {

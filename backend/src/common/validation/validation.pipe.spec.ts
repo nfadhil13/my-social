@@ -1,9 +1,9 @@
-import { ValidationPipe } from './validation.pipe';
+import { ZodValidationPipe } from './validation.pipe';
 import { z } from 'zod';
 import { ValidationException } from './validation.exception';
 
 describe('ValidationPipe', () => {
-  let pipe: ValidationPipe;
+  let pipe: ZodValidationPipe;
 
   const messages = {
     name: {
@@ -32,7 +32,7 @@ describe('ValidationPipe', () => {
   });
 
   beforeEach(() => {
-    pipe = new ValidationPipe(schemaExample);
+    pipe = new ZodValidationPipe(schemaExample);
   });
 
   it('should return the parsed value if the value is valid', () => {
