@@ -3,6 +3,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { RegisterDto } from '../model/user/register.model';
+import { ConflictException } from '@nestjs/common';
 
 describe('AuthController', () => {
   let authService: DeepMockProxy<AuthService>;
@@ -41,13 +42,17 @@ describe('AuthController', () => {
         email: 'test@test.com',
         password: 'test123',
       };
-      // authService.register.mockRejectedValue(
-      //   new ConflictException('Email already exists'),
-      // );
+      authService.register.mockRejectedValue(
+        new ConflictException('Email already exists'),
+      );
       try {
         await controller.register(registerDto);
       } catch (error) {
         expect(error).toBeDefined();
+        if (!(error instanceof ConflictException)) {
+          fail('Error is not a ConflictException');
+        }
+        expect(error.message).toBe('Email already exists');
       }
     });
   });
