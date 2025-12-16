@@ -1,9 +1,9 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthValidation } from 'src/model/user/auth.validation';
-import type { RegisterDto } from 'src/model/user/register.model';
-import { ZodValidationPipe } from 'src/common/validation/validation.pipe';
-import { ResponseModel } from 'src/model/response.model';
+import { AuthValidation } from '../model/user/auth.validation';
+import type { RegisterDto } from '../model/user/register.model';
+import { ResponseModel } from '../model/response.model';
+import { ZodValidationPipe } from '../common/validation/validation.pipe';
 
 @Controller('')
 export class AuthController {
@@ -14,7 +14,7 @@ export class AuthController {
     @Body(new ZodValidationPipe(AuthValidation.REGISTER))
     registerDto: RegisterDto,
   ): Promise<ResponseModel<string>> {
-    return this.authService
+    return await this.authService
       .register(registerDto)
       .toSuccessResponse('USER_REGISTERED_SUCCESSFULLY');
   }

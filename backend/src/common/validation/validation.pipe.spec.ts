@@ -1,10 +1,8 @@
-import { ZodValidationPipe } from './validation.pipe';
-import { z } from 'zod';
 import { ValidationException } from './validation.exception';
+import { z } from 'zod';
+import { ZodValidationPipe } from './validation.pipe';
 
 describe('ValidationPipe', () => {
-  let pipe: ZodValidationPipe;
-
   const messages = {
     name: {
       min: 'Name must be at least 1 character',
@@ -21,6 +19,8 @@ describe('ValidationPipe', () => {
       },
     },
   };
+
+  let pipe: ZodValidationPipe;
 
   const schemaExample = z.object({
     name: z.string().min(1, messages.name.min),

@@ -7,12 +7,6 @@ export class ResponseModel<T = unknown> {
   };
 }
 
-declare global {
-  interface Promise<T> {
-    toSuccessResponse(message: string): Promise<ResponseModel<T>>;
-  }
-}
-
 Promise.prototype.toSuccessResponse = async function <T>(
   message: string,
 ): Promise<ResponseModel<T>> {
