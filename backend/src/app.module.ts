@@ -7,7 +7,11 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 
 @Module({
-  imports: [CommonModule, ConfigModule.forRoot({ isGlobal: true }), AuthModule],
+  imports: [
+    CommonModule,
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
+    AuthModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

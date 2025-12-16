@@ -10,13 +10,23 @@ import { ZodError } from 'zod';
 //   };
 // };
 
-export type ValidationError = Record<string, string>;
+export type ValidationError = Record<string, string[]>;
 
 const formatError = (error: ZodError): ValidationError => {
-  return error.issues.reduce((acc, issue) => {
-    acc[issue.path.join('.')] = issue.message;
-    return acc;
-  }, {} as ValidationError);
+  console.log(JSON.stringify(error.issues));
+  return error.issues.reduce(
+    (acc, issue) => {
+      const key = issue.path.join('.');
+      const currentValue = acc[key];
+      if (acc[key]) {
+        currentValue.push(issue.message);
+      } else {
+        acc[key] = [issue.message];
+      }
+      return acc;
+    },
+    {} as Record<string, string[]>,
+  );
 };
 
 export class ValidationException extends BadRequestException {

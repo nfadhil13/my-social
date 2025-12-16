@@ -6,8 +6,13 @@ import { PrismaClient } from './client/client';
 @Injectable()
 export class PrismaService extends PrismaClient {
   constructor(configService: ConfigService) {
+    const databaseUrl = configService.get<string>('DATABASE_URL');
+    console.log('DATABASE_URL from ConfigService:', databaseUrl);
+    if (!databaseUrl) {
+      throw new Error('DATABASE_URL is not set in environment variables');
+    }
     const adapter = new PrismaPg({
-      url: configService.get<string>('DATABASE_URL'),
+      connectionString: databaseUrl,
     });
     super({ adapter });
   }
