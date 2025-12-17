@@ -29,6 +29,8 @@ describe('AuthController', () => {
       const registerDto: RegisterDto = {
         email: 'test@test.com',
         password: 'test123',
+        name: 'test',
+        username: 'test',
       };
       authService.register.mockResolvedValue(userId);
       expect(await controller.register(registerDto)).toEqual({
@@ -41,6 +43,8 @@ describe('AuthController', () => {
       const registerDto: RegisterDto = {
         email: 'test@test.com',
         password: 'test123',
+        name: 'test',
+        username: 'test',
       };
       authService.register.mockRejectedValue(
         new ConflictException('Email already exists'),
