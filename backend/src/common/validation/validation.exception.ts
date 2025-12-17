@@ -13,7 +13,6 @@ import { ZodError } from 'zod';
 export type ValidationError = Record<string, string[]>;
 
 const formatError = (error: ZodError): ValidationError => {
-  console.log(JSON.stringify(error.issues));
   return error.issues.reduce(
     (acc, issue) => {
       const key = issue.path.join('.');

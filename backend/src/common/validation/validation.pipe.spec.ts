@@ -62,10 +62,10 @@ describe('ValidationPipe', () => {
       const response = error.getResponse() as Record<string, string>;
       expect(response['message']).toBe(ValidationException.MESSAGE);
       expect(response['errors']).toEqual({
-        name: messages.name.min,
-        age: messages.age.min,
-        'profile.bio': messages.profile.bio.min,
-        'profile.avatar_file_id': messages.profile.avatar_file_id.min,
+        name: [messages.name.min],
+        age: [messages.age.min],
+        'profile.bio': [messages.profile.bio.min],
+        'profile.avatar_file_id': [messages.profile.avatar_file_id.min],
       });
     }
   });
