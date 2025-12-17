@@ -3,6 +3,14 @@ import { z } from 'zod';
 export class AuthValidation {
   static readonly REGISTER = z.object({
     email: z.string().email().min(1),
+    name: z.string().min(1),
+    username: z
+      .string()
+      .min(1)
+      .regex(/^[a-zA-Z0-9]+$/, {
+        message: 'USERNAME_RULES',
+      }),
+
     password: z
       .string()
       .min(8)
