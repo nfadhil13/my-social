@@ -23,6 +23,7 @@ enum Role {
 model User {
   id            String   @id @default(uuid()) @db.Uuid()
   email         String   @unique
+  username      String   @unique
   password_hash String
   role          Role     @default(USER)
   created_at    DateTime @default(now())
@@ -36,9 +37,10 @@ model User {
 model Profile {
   id                String   @id @default(uuid()) @db.Uuid()
   user_id           String   @unique @db.Uuid()
-  bio               String
-  avatar_file_id    String
-  thumbnail_file_id String
+  name              String
+  bio               String?
+  avatar_file_id    String?
+  thumbnail_file_id String?
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
 

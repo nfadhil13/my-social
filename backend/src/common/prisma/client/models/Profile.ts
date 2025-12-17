@@ -27,6 +27,7 @@ export type AggregateProfile = {
 export type ProfileMinAggregateOutputType = {
   id: string | null
   user_id: string | null
+  name: string | null
   bio: string | null
   avatar_file_id: string | null
   thumbnail_file_id: string | null
@@ -37,6 +38,7 @@ export type ProfileMinAggregateOutputType = {
 export type ProfileMaxAggregateOutputType = {
   id: string | null
   user_id: string | null
+  name: string | null
   bio: string | null
   avatar_file_id: string | null
   thumbnail_file_id: string | null
@@ -47,6 +49,7 @@ export type ProfileMaxAggregateOutputType = {
 export type ProfileCountAggregateOutputType = {
   id: number
   user_id: number
+  name: number
   bio: number
   avatar_file_id: number
   thumbnail_file_id: number
@@ -59,6 +62,7 @@ export type ProfileCountAggregateOutputType = {
 export type ProfileMinAggregateInputType = {
   id?: true
   user_id?: true
+  name?: true
   bio?: true
   avatar_file_id?: true
   thumbnail_file_id?: true
@@ -69,6 +73,7 @@ export type ProfileMinAggregateInputType = {
 export type ProfileMaxAggregateInputType = {
   id?: true
   user_id?: true
+  name?: true
   bio?: true
   avatar_file_id?: true
   thumbnail_file_id?: true
@@ -79,6 +84,7 @@ export type ProfileMaxAggregateInputType = {
 export type ProfileCountAggregateInputType = {
   id?: true
   user_id?: true
+  name?: true
   bio?: true
   avatar_file_id?: true
   thumbnail_file_id?: true
@@ -162,9 +168,10 @@ export type ProfileGroupByArgs<ExtArgs extends runtime.Types.Extensions.Internal
 export type ProfileGroupByOutputType = {
   id: string
   user_id: string
-  bio: string
-  avatar_file_id: string
-  thumbnail_file_id: string
+  name: string
+  bio: string | null
+  avatar_file_id: string | null
+  thumbnail_file_id: string | null
   created_at: Date
   updated_at: Date
   _count: ProfileCountAggregateOutputType | null
@@ -193,9 +200,10 @@ export type ProfileWhereInput = {
   NOT?: Prisma.ProfileWhereInput | Prisma.ProfileWhereInput[]
   id?: Prisma.UuidFilter<"Profile"> | string
   user_id?: Prisma.UuidFilter<"Profile"> | string
-  bio?: Prisma.StringFilter<"Profile"> | string
-  avatar_file_id?: Prisma.StringFilter<"Profile"> | string
-  thumbnail_file_id?: Prisma.StringFilter<"Profile"> | string
+  name?: Prisma.StringFilter<"Profile"> | string
+  bio?: Prisma.StringNullableFilter<"Profile"> | string | null
+  avatar_file_id?: Prisma.StringNullableFilter<"Profile"> | string | null
+  thumbnail_file_id?: Prisma.StringNullableFilter<"Profile"> | string | null
   created_at?: Prisma.DateTimeFilter<"Profile"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"Profile"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -204,9 +212,10 @@ export type ProfileWhereInput = {
 export type ProfileOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   user_id?: Prisma.SortOrder
-  bio?: Prisma.SortOrder
-  avatar_file_id?: Prisma.SortOrder
-  thumbnail_file_id?: Prisma.SortOrder
+  name?: Prisma.SortOrder
+  bio?: Prisma.SortOrderInput | Prisma.SortOrder
+  avatar_file_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  thumbnail_file_id?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
@@ -218,9 +227,10 @@ export type ProfileWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.ProfileWhereInput | Prisma.ProfileWhereInput[]
   OR?: Prisma.ProfileWhereInput[]
   NOT?: Prisma.ProfileWhereInput | Prisma.ProfileWhereInput[]
-  bio?: Prisma.StringFilter<"Profile"> | string
-  avatar_file_id?: Prisma.StringFilter<"Profile"> | string
-  thumbnail_file_id?: Prisma.StringFilter<"Profile"> | string
+  name?: Prisma.StringFilter<"Profile"> | string
+  bio?: Prisma.StringNullableFilter<"Profile"> | string | null
+  avatar_file_id?: Prisma.StringNullableFilter<"Profile"> | string | null
+  thumbnail_file_id?: Prisma.StringNullableFilter<"Profile"> | string | null
   created_at?: Prisma.DateTimeFilter<"Profile"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"Profile"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -229,9 +239,10 @@ export type ProfileWhereUniqueInput = Prisma.AtLeast<{
 export type ProfileOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   user_id?: Prisma.SortOrder
-  bio?: Prisma.SortOrder
-  avatar_file_id?: Prisma.SortOrder
-  thumbnail_file_id?: Prisma.SortOrder
+  name?: Prisma.SortOrder
+  bio?: Prisma.SortOrderInput | Prisma.SortOrder
+  avatar_file_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  thumbnail_file_id?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
   _count?: Prisma.ProfileCountOrderByAggregateInput
@@ -245,18 +256,20 @@ export type ProfileScalarWhereWithAggregatesInput = {
   NOT?: Prisma.ProfileScalarWhereWithAggregatesInput | Prisma.ProfileScalarWhereWithAggregatesInput[]
   id?: Prisma.UuidWithAggregatesFilter<"Profile"> | string
   user_id?: Prisma.UuidWithAggregatesFilter<"Profile"> | string
-  bio?: Prisma.StringWithAggregatesFilter<"Profile"> | string
-  avatar_file_id?: Prisma.StringWithAggregatesFilter<"Profile"> | string
-  thumbnail_file_id?: Prisma.StringWithAggregatesFilter<"Profile"> | string
+  name?: Prisma.StringWithAggregatesFilter<"Profile"> | string
+  bio?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  avatar_file_id?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  thumbnail_file_id?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
   created_at?: Prisma.DateTimeWithAggregatesFilter<"Profile"> | Date | string
   updated_at?: Prisma.DateTimeWithAggregatesFilter<"Profile"> | Date | string
 }
 
 export type ProfileCreateInput = {
   id?: string
-  bio: string
-  avatar_file_id: string
-  thumbnail_file_id: string
+  name: string
+  bio?: string | null
+  avatar_file_id?: string | null
+  thumbnail_file_id?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   user: Prisma.UserCreateNestedOneWithoutProfileInput
@@ -265,18 +278,20 @@ export type ProfileCreateInput = {
 export type ProfileUncheckedCreateInput = {
   id?: string
   user_id: string
-  bio: string
-  avatar_file_id: string
-  thumbnail_file_id: string
+  name: string
+  bio?: string | null
+  avatar_file_id?: string | null
+  thumbnail_file_id?: string | null
   created_at?: Date | string
   updated_at?: Date | string
 }
 
 export type ProfileUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  bio?: Prisma.StringFieldUpdateOperationsInput | string
-  avatar_file_id?: Prisma.StringFieldUpdateOperationsInput | string
-  thumbnail_file_id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar_file_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnail_file_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutProfileNestedInput
@@ -285,9 +300,10 @@ export type ProfileUpdateInput = {
 export type ProfileUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   user_id?: Prisma.StringFieldUpdateOperationsInput | string
-  bio?: Prisma.StringFieldUpdateOperationsInput | string
-  avatar_file_id?: Prisma.StringFieldUpdateOperationsInput | string
-  thumbnail_file_id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar_file_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnail_file_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -295,18 +311,20 @@ export type ProfileUncheckedUpdateInput = {
 export type ProfileCreateManyInput = {
   id?: string
   user_id: string
-  bio: string
-  avatar_file_id: string
-  thumbnail_file_id: string
+  name: string
+  bio?: string | null
+  avatar_file_id?: string | null
+  thumbnail_file_id?: string | null
   created_at?: Date | string
   updated_at?: Date | string
 }
 
 export type ProfileUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  bio?: Prisma.StringFieldUpdateOperationsInput | string
-  avatar_file_id?: Prisma.StringFieldUpdateOperationsInput | string
-  thumbnail_file_id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar_file_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnail_file_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -314,9 +332,10 @@ export type ProfileUpdateManyMutationInput = {
 export type ProfileUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   user_id?: Prisma.StringFieldUpdateOperationsInput | string
-  bio?: Prisma.StringFieldUpdateOperationsInput | string
-  avatar_file_id?: Prisma.StringFieldUpdateOperationsInput | string
-  thumbnail_file_id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar_file_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnail_file_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -329,6 +348,7 @@ export type ProfileNullableScalarRelationFilter = {
 export type ProfileCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   user_id?: Prisma.SortOrder
+  name?: Prisma.SortOrder
   bio?: Prisma.SortOrder
   avatar_file_id?: Prisma.SortOrder
   thumbnail_file_id?: Prisma.SortOrder
@@ -339,6 +359,7 @@ export type ProfileCountOrderByAggregateInput = {
 export type ProfileMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   user_id?: Prisma.SortOrder
+  name?: Prisma.SortOrder
   bio?: Prisma.SortOrder
   avatar_file_id?: Prisma.SortOrder
   thumbnail_file_id?: Prisma.SortOrder
@@ -349,6 +370,7 @@ export type ProfileMaxOrderByAggregateInput = {
 export type ProfileMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   user_id?: Prisma.SortOrder
+  name?: Prisma.SortOrder
   bio?: Prisma.SortOrder
   avatar_file_id?: Prisma.SortOrder
   thumbnail_file_id?: Prisma.SortOrder
@@ -388,20 +410,26 @@ export type ProfileUncheckedUpdateOneWithoutUserNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.ProfileUpdateToOneWithWhereWithoutUserInput, Prisma.ProfileUpdateWithoutUserInput>, Prisma.ProfileUncheckedUpdateWithoutUserInput>
 }
 
+export type NullableStringFieldUpdateOperationsInput = {
+  set?: string | null
+}
+
 export type ProfileCreateWithoutUserInput = {
   id?: string
-  bio: string
-  avatar_file_id: string
-  thumbnail_file_id: string
+  name: string
+  bio?: string | null
+  avatar_file_id?: string | null
+  thumbnail_file_id?: string | null
   created_at?: Date | string
   updated_at?: Date | string
 }
 
 export type ProfileUncheckedCreateWithoutUserInput = {
   id?: string
-  bio: string
-  avatar_file_id: string
-  thumbnail_file_id: string
+  name: string
+  bio?: string | null
+  avatar_file_id?: string | null
+  thumbnail_file_id?: string | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -424,18 +452,20 @@ export type ProfileUpdateToOneWithWhereWithoutUserInput = {
 
 export type ProfileUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  bio?: Prisma.StringFieldUpdateOperationsInput | string
-  avatar_file_id?: Prisma.StringFieldUpdateOperationsInput | string
-  thumbnail_file_id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar_file_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnail_file_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type ProfileUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  bio?: Prisma.StringFieldUpdateOperationsInput | string
-  avatar_file_id?: Prisma.StringFieldUpdateOperationsInput | string
-  thumbnail_file_id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar_file_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnail_file_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -445,6 +475,7 @@ export type ProfileUncheckedUpdateWithoutUserInput = {
 export type ProfileSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   user_id?: boolean
+  name?: boolean
   bio?: boolean
   avatar_file_id?: boolean
   thumbnail_file_id?: boolean
@@ -456,6 +487,7 @@ export type ProfileSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
 export type ProfileSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   user_id?: boolean
+  name?: boolean
   bio?: boolean
   avatar_file_id?: boolean
   thumbnail_file_id?: boolean
@@ -467,6 +499,7 @@ export type ProfileSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
 export type ProfileSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   user_id?: boolean
+  name?: boolean
   bio?: boolean
   avatar_file_id?: boolean
   thumbnail_file_id?: boolean
@@ -478,6 +511,7 @@ export type ProfileSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
 export type ProfileSelectScalar = {
   id?: boolean
   user_id?: boolean
+  name?: boolean
   bio?: boolean
   avatar_file_id?: boolean
   thumbnail_file_id?: boolean
@@ -485,7 +519,7 @@ export type ProfileSelectScalar = {
   updated_at?: boolean
 }
 
-export type ProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "user_id" | "bio" | "avatar_file_id" | "thumbnail_file_id" | "created_at" | "updated_at", ExtArgs["result"]["profile"]>
+export type ProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "user_id" | "name" | "bio" | "avatar_file_id" | "thumbnail_file_id" | "created_at" | "updated_at", ExtArgs["result"]["profile"]>
 export type ProfileInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -504,9 +538,10 @@ export type $ProfilePayload<ExtArgs extends runtime.Types.Extensions.InternalArg
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     user_id: string
-    bio: string
-    avatar_file_id: string
-    thumbnail_file_id: string
+    name: string
+    bio: string | null
+    avatar_file_id: string | null
+    thumbnail_file_id: string | null
     created_at: Date
     updated_at: Date
   }, ExtArgs["result"]["profile"]>
@@ -935,6 +970,7 @@ export interface Prisma__ProfileClient<T, Null = never, ExtArgs extends runtime.
 export interface ProfileFieldRefs {
   readonly id: Prisma.FieldRef<"Profile", 'String'>
   readonly user_id: Prisma.FieldRef<"Profile", 'String'>
+  readonly name: Prisma.FieldRef<"Profile", 'String'>
   readonly bio: Prisma.FieldRef<"Profile", 'String'>
   readonly avatar_file_id: Prisma.FieldRef<"Profile", 'String'>
   readonly thumbnail_file_id: Prisma.FieldRef<"Profile", 'String'>
