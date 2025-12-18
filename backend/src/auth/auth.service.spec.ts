@@ -6,8 +6,8 @@ import { RegisterDto } from '../model/user/register.model';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { type LoginDto } from '../model/user/login.model';
-import { DomainException } from '../common/error/domain.exception';
-import { AUTH_ERRORS } from './auth.errors';
+import { DomainException } from '../common/messages/domain.exception';
+import { AUTH_ERRORS } from './auth.messages';
 
 describe('AuthService', () => {
   let service: AuthService;

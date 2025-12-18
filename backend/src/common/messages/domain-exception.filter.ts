@@ -2,11 +2,12 @@ import { ArgumentsHost, Catch } from '@nestjs/common';
 import { DomainException } from './domain.exception';
 import { BaseExceptionFilter } from '@nestjs/core';
 import { Request, Response } from 'express';
-import { DomainErrorType } from './domain.error';
+import { DomainMessageType } from './domain.messages';
 import { ResponseModel } from '../../model/response.model';
 import { getErrorFromDomainException } from '../validation/validation.exception';
 
-const DOMAIN_TYPE_HTTP_MAP: Record<DomainErrorType, number> = {
+const DOMAIN_TYPE_HTTP_MAP: Record<DomainMessageType, number> = {
+  SUCCESS: 200,
   NOT_FOUND: 404,
   CONFLICT: 409,
   UNAUTHORIZED: 401,

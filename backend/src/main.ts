@@ -1,7 +1,7 @@
 import './model/response.model';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { DomainExceptionFilter } from './common/error/domain-exception.filter';
+import { DomainExceptionFilter } from './common/messages/domain-exception.filter';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);

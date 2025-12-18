@@ -1,4 +1,5 @@
-export enum DomainErrorType {
+export enum DomainMessageType {
+  SUCCESS = 'SUCCESS',
   NOT_FOUND = 'NOT_FOUND',
   CONFLICT = 'CONFLICT',
   UNAUTHORIZED = 'UNAUTHORIZED',
@@ -7,7 +8,7 @@ export enum DomainErrorType {
   INTERNAL = 'INTERNAL',
 }
 
-export interface DomainErrorDefinition {
+export interface DomainMessage {
   code: string;
-  type: DomainErrorType;
+  type: DomainMessageType;
 }

@@ -5,8 +5,8 @@ import { JwtService } from '@nestjs/jwt';
 import { type RegisterDto } from '../model/user/register.model';
 import { LoginResponse, type LoginDto } from '../model/user/login.model';
 import { UserWhereUniqueInput } from '../common/prisma/client/models/User';
-import { AUTH_ERRORS } from './auth.errors';
-import { DomainException } from '../common/error/domain.exception';
+import { AUTH_ERRORS } from './auth.messages';
+import { DomainException } from '../common/messages/domain.exception';
 
 @Injectable()
 export class AuthService {
@@ -66,6 +66,13 @@ export class AuthService {
       where: {
         email: loginDto.email,
       },
+      select: {
+        id: true,
+        email: true,
+        password_hash: true,
+        username: true,
+        role: true,
+      } as const,
     });
     if (!user) throw new DomainException(AUTH_ERRORS.INVALID_CREDENTIALS);
     const isPasswordValid = await bcrypt.compare(

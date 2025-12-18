@@ -4,6 +4,7 @@ import { AuthService } from './auth.service';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { RegisterDto } from '../model/user/register.model';
 import { ConflictException } from '@nestjs/common';
+import { LoginDto, LoginResponse } from '../model/user/login.model';
 
 describe('AuthController', () => {
   let authService: DeepMockProxy<AuthService>;
@@ -58,6 +59,30 @@ describe('AuthController', () => {
         }
         expect(error.message).toBe('Email already exists');
       }
+    });
+  });
+
+  describe('login', () => {
+    it('should login a user', async () => {
+      const userId = '123';
+      const accessToken = 'ACCESS_TOKEN';
+      const loginDto: LoginDto = {
+        email: 'test@test.com',
+        password: 'P@ssw0rd41',
+      };
+      authService.login.mockResolvedValue(<LoginResponse>{
+        user: {
+          email: 'test@test.com',
+          username: 'test',
+          name: 'test',
+          id: userId,
+          role: 'USER',
+        },
+        accessToken: accessToken,
+      });
+      const result = await controller.login(loginDto);
+      expect(result.data.user.id).toBe(userId);
+      expect(result.data.accessToken).toBe(accessToken);
     });
   });
 });

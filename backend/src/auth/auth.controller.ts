@@ -5,6 +5,7 @@ import type { RegisterDto } from '../model/user/register.model';
 import { ResponseModel } from '../model/response.model';
 import { ZodValidationPipe } from '../common/validation/validation.pipe';
 import { type LoginResponse, type LoginDto } from '../model/user/login.model';
+import { AUTH_MESSAGES } from './auth.messages';
 
 @Controller('')
 export class AuthController {
@@ -17,7 +18,7 @@ export class AuthController {
   ): Promise<ResponseModel<string>> {
     return await this.authService
       .register(registerDto)
-      .toSuccessResponse('USER_REGISTERED_SUCCESSFULLY');
+      .toSuccessResponse(AUTH_MESSAGES.USER_REGISTERED_SUCCESSFULLY);
   }
 
   @Post('login')
@@ -27,6 +28,6 @@ export class AuthController {
   ): Promise<ResponseModel<LoginResponse>> {
     return await this.authService
       .login(loginDto)
-      .toSuccessResponse('USER_LOGGED_IN_SUCCESSFULLY');
+      .toSuccessResponse(AUTH_MESSAGES.USER_LOGGED_IN_SUCCESSFULLY);
   }
 }

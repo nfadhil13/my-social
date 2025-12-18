@@ -1,7 +1,7 @@
 import { ZodError } from 'zod';
 import { $ZodIssue } from 'zod/v4/core';
-import { DomainException } from '../error/domain.exception';
-import { DomainErrorType } from '../error/domain.error';
+import { DomainException } from '../messages/domain.exception';
+import { DomainMessageType } from '../messages/domain.messages';
 
 // type User = {
 //   name: string;
@@ -44,7 +44,7 @@ export class ValidationException extends DomainException {
   constructor(zodError?: ZodError) {
     super({
       code: ValidationException.MESSAGE,
-      type: DomainErrorType.VALIDATION,
+      type: DomainMessageType.VALIDATION,
     });
     this.errors = zodError != undefined ? formatError(zodError) : undefined;
   }

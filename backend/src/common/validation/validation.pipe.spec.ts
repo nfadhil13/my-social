@@ -60,12 +60,14 @@ describe('ValidationPipe', () => {
         fail('Expected a BadRequestException to be thrown');
       }
       expect(error.error.code).toBe(ValidationException.MESSAGE);
-      expect(error.errors).toEqual({
-        name: [messages.name.min],
-        age: [messages.age.min],
-        'profile.bio': [messages.profile.bio.min],
-        'profile.avatar_file_id': [messages.profile.avatar_file_id.min],
-      });
+      expect(error.errors?.['name']?.[0]?.code).toBe(messages.name.min);
+      expect(error.errors?.['age']?.[0]?.code).toBe(messages.age.min);
+      expect(error.errors?.['profile.bio']?.[0]?.code).toBe(
+        messages.profile.bio.min,
+      );
+      expect(error.errors?.['profile.avatar_file_id']?.[0]?.code).toBe(
+        messages.profile.avatar_file_id.min,
+      );
     }
   });
 });
