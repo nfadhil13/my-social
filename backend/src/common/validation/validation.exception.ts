@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { ZodError } from 'zod';
+import { $ZodIssue } from 'zod/v4/core';
 
 // type User = {
 //   name: string;
@@ -10,21 +11,29 @@ import { ZodError } from 'zod';
 //   };
 // };
 
-export type ValidationError = Record<string, string[]>;
+export type ValidationIssue<T = unknown> = {
+  code: string;
+  data?: T;
+};
+export type ValidationError = Record<string, ValidationIssue[]>;
 
 const formatError = (error: ZodError): ValidationError => {
   return error.issues.reduce(
     (acc, issue) => {
       const key = issue.path.join('.');
       const currentValue = acc[key];
+      const error: ValidationIssue = {
+        code: issue.message,
+        data: extractValidationDataFromIssues(issue),
+      };
       if (acc[key]) {
-        currentValue.push(issue.message);
+        currentValue.push(error);
       } else {
-        acc[key] = [issue.message];
+        acc[key] = [error];
       }
       return acc;
     },
-    {} as Record<string, string[]>,
+    {} as Record<string, ValidationIssue[]>,
   );
 };
 
@@ -41,3 +50,12 @@ export class ValidationException extends BadRequestException {
     });
   }
 }
+
+const extractValidationDataFromIssues = (
+  issue: $ZodIssue,
+): Record<any, any> => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { code, message, path, input, ...rest } = issue;
+  delete (rest as Record<string, unknown>).origin;
+  return rest;
+};
