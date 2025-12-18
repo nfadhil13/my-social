@@ -4,6 +4,7 @@ import { BaseExceptionFilter } from '@nestjs/core';
 import { Request, Response } from 'express';
 import { DomainErrorType } from './domain.error';
 import { ResponseModel } from '../../model/response.model';
+import { getErrorFromDomainException } from '../validation/validation.exception';
 
 const DOMAIN_TYPE_HTTP_MAP: Record<DomainErrorType, number> = {
   NOT_FOUND: 404,
@@ -21,10 +22,11 @@ export class DomainExceptionFilter extends BaseExceptionFilter {
     const res = ctx.getResponse<Response>();
 
     const httpStatus = DOMAIN_TYPE_HTTP_MAP[exception.error.type] ?? 500;
-
+    const validationErrors = getErrorFromDomainException(exception);
     res.status(httpStatus).json(<ResponseModel>{
       message: exception.error.code,
       success: false,
+      errors: validationErrors,
       data: null,
     });
   }

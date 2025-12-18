@@ -2,9 +2,7 @@ export class ResponseModel<T = unknown> {
   message: string;
   data: T;
   success: boolean;
-  errors?: {
-    [key: string]: string;
-  };
+  errors?: Record<string, any>;
 }
 
 Promise.prototype.toSuccessResponse = async function <T>(

@@ -59,9 +59,8 @@ describe('ValidationPipe', () => {
       if (!(error instanceof ValidationException)) {
         fail('Expected a BadRequestException to be thrown');
       }
-      const response = error.getResponse() as Record<string, string>;
-      expect(response['message']).toBe(ValidationException.MESSAGE);
-      expect(response['errors']).toEqual({
+      expect(error.error.code).toBe(ValidationException.MESSAGE);
+      expect(error.errors).toEqual({
         name: [messages.name.min],
         age: [messages.age.min],
         'profile.bio': [messages.profile.bio.min],

@@ -1,6 +1,7 @@
-import { BadRequestException } from '@nestjs/common';
 import { ZodError } from 'zod';
 import { $ZodIssue } from 'zod/v4/core';
+import { DomainException } from '../error/domain.exception';
+import { DomainErrorType } from '../error/domain.error';
 
 // type User = {
 //   name: string;
@@ -37,19 +38,26 @@ const formatError = (error: ZodError): ValidationError => {
   );
 };
 
-export class ValidationException extends BadRequestException {
+export class ValidationException extends DomainException {
   static MESSAGE = 'VALIDATION_ERROR';
-
-  constructor(
-    public readonly zodError?: ZodError,
-    public readonly message: string = ValidationException.MESSAGE,
-  ) {
+  public readonly errors?: ValidationError;
+  constructor(zodError?: ZodError) {
     super({
-      message: message,
-      errors: zodError != undefined ? formatError(zodError) : [],
+      code: ValidationException.MESSAGE,
+      type: DomainErrorType.VALIDATION,
     });
+    this.errors = zodError != undefined ? formatError(zodError) : undefined;
   }
 }
+
+export const getErrorFromDomainException = (
+  exception: DomainException,
+): ValidationError | undefined => {
+  if (exception instanceof ValidationException) {
+    return exception.errors;
+  }
+  return undefined;
+};
 
 const extractValidationDataFromIssues = (
   issue: $ZodIssue,
