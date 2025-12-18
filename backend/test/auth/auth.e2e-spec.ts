@@ -19,7 +19,7 @@ describe('AuthController (e2e)', () => {
       imports: [
         ConfigModule.forRoot({
           isGlobal: true,
-          envFilePath: '.env.test.local',
+          envFilePath: '.env',
         }),
         AuthModule,
         CommonModule,
@@ -41,10 +41,11 @@ describe('AuthController (e2e)', () => {
         .post('/register')
         .send(<RegisterDto>{
           email: 'test@test.com',
-          password: 'test123',
+          password: 'P@ssw0rd41',
           name: 'test',
           username: 'test',
         });
+      console.log(result.body);
       expect(result.status).toBe(201);
       const { message, data, success } =
         result.body as unknown as ResponseModel<string>;

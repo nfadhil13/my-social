@@ -1,14 +1,12 @@
-import {
-  ConflictException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { type RegisterDto } from '../model/user/register.model';
 import { LoginResponse, type LoginDto } from '../model/user/login.model';
-import { type UserWhereUniqueInput } from '../common/prisma/client/models';
+import { UserWhereUniqueInput } from '../common/prisma/client/models/User';
+import { AUTH_ERRORS } from './auth.errors';
+import { DomainException } from '../common/error/domain.exception';
 
 @Injectable()
 export class AuthService {
@@ -18,34 +16,41 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto): Promise<string> {
-    const existingUser = await this.prisma.user.findUnique({
-      where: {
+    const existingUser = await this.prisma.user.findFirst({
+      where: <UserWhereUniqueInput>{
         OR: [
           {
-            email: {
-              equals: registerDto.email,
-            },
+            email: registerDto.email,
           },
           {
-            username: {
-              equals: registerDto.username,
-            },
+            username: registerDto.username,
           },
         ],
-      } as UserWhereUniqueInput,
+      },
+      select: {
+        email: true,
+        username: true,
+      },
     });
+
     if (existingUser) {
-      throw new ConflictException('Email or Username already exists');
+      if (existingUser.email === registerDto.email) {
+        throw new DomainException(AUTH_ERRORS.EMAIL_ALREADY_EXISTS);
+      }
+      if (existingUser.username === registerDto.username) {
+        throw new DomainException(AUTH_ERRORS.USERNAME_ALREADY_EXISTS);
+      }
     }
     const { password, ...register } = registerDto;
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await this.prisma.user.create({
       data: {
-        ...register,
+        email: register.email,
+        username: register.username,
         password_hash: passwordHash,
         profile: {
           create: {
-            name: registerDto.name,
+            name: register.name,
             bio: null,
             avatar_file_id: null,
             thumbnail_file_id: null,
@@ -62,14 +67,13 @@ export class AuthService {
         email: loginDto.email,
       },
     });
-    if (!user)
-      throw new UnauthorizedException('Username or Password is incorrect');
+    if (!user) throw new DomainException(AUTH_ERRORS.INVALID_CREDENTIALS);
     const isPasswordValid = await bcrypt.compare(
       loginDto.password,
       user.password_hash,
     );
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Username or Password is incorrect');
+      throw new DomainException(AUTH_ERRORS.INVALID_CREDENTIALS);
     }
     const accessToken = await this.jwtService.signAsync({ userId: user.id });
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

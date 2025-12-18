@@ -3,10 +3,11 @@ import { AuthService } from './auth.service';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { RegisterDto } from '../model/user/register.model';
-import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { type LoginDto } from '../model/user/login.model';
+import { DomainException } from '../common/error/domain.exception';
+import { AUTH_ERRORS } from './auth.errors';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -58,16 +59,42 @@ describe('AuthService', () => {
       expect(user).toBe(userId);
     });
 
-    it('should throw an error if the user already exists', async () => {
+    it('should throw an error if the email already exists', async () => {
       const registerDto: RegisterDto = {
         email: 'test@test.com',
         password: 'test123',
         name: 'test',
         username: 'test',
       };
-      prismaService.user.findUnique.mockResolvedValue({
+      prismaService.user.findFirst.mockResolvedValue({
         id: '123',
         email: registerDto.email,
+        password_hash: 'test123',
+        role: 'USER',
+        username: 'USERNAME',
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+      try {
+        await service.register(registerDto);
+      } catch (error) {
+        expect(error).toBeInstanceOf(DomainException);
+        expect((error as DomainException).error).toBe(
+          AUTH_ERRORS.EMAIL_ALREADY_EXISTS,
+        );
+      }
+    });
+
+    it('should throw an error if the username already exists', async () => {
+      const registerDto: RegisterDto = {
+        email: 'test@test.com',
+        password: 'test123',
+        name: 'test',
+        username: 'test',
+      };
+      prismaService.user.findFirst.mockResolvedValue({
+        id: '123',
+        email: 'other@test.com',
         password_hash: 'test123',
         role: 'USER',
         username: registerDto.username,
@@ -77,9 +104,9 @@ describe('AuthService', () => {
       try {
         await service.register(registerDto);
       } catch (error) {
-        expect(error).toBeInstanceOf(ConflictException);
-        expect((error as ConflictException).message).toBe(
-          'Email or Username already exists',
+        expect(error).toBeInstanceOf(DomainException);
+        expect((error as DomainException).error).toBe(
+          AUTH_ERRORS.USERNAME_ALREADY_EXISTS,
         );
       }
     });
@@ -120,9 +147,9 @@ describe('AuthService', () => {
       try {
         await service.login(loginDto);
       } catch (error) {
-        expect(error).toBeInstanceOf(UnauthorizedException);
-        expect((error as UnauthorizedException).message).toBe(
-          'Username or Password is incorrect',
+        expect(error).toBeInstanceOf(DomainException);
+        expect((error as DomainException).error).toBe(
+          AUTH_ERRORS.INVALID_CREDENTIALS,
         );
       }
     });
@@ -144,9 +171,9 @@ describe('AuthService', () => {
       try {
         await service.login(loginDto);
       } catch (error) {
-        expect(error).toBeInstanceOf(UnauthorizedException);
-        expect((error as UnauthorizedException).message).toBe(
-          'Username or Password is incorrect',
+        expect(error).toBeInstanceOf(DomainException);
+        expect((error as DomainException).error).toBe(
+          AUTH_ERRORS.INVALID_CREDENTIALS,
         );
       }
     });
