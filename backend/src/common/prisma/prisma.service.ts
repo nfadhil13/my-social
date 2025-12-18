@@ -7,7 +7,6 @@ import { PrismaClient } from './client/client';
 export class PrismaService extends PrismaClient {
   constructor(configService: ConfigService) {
     const databaseUrl = configService.get<string>('DATABASE_URL');
-    console.log('DATABASE_URL from ConfigService:', databaseUrl);
     if (!databaseUrl) {
       throw new Error('DATABASE_URL is not set in environment variables');
     }
