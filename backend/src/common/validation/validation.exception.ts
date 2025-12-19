@@ -1,16 +1,7 @@
 import { ZodError } from 'zod';
 import { $ZodIssue } from 'zod/v4/core';
 import { DomainException } from '../messages/domain.exception';
-import { DomainMessageType } from '../messages/domain.messages';
-
-// type User = {
-//   name: string;
-//   age: number;
-//   profile: {
-//     bio: string;
-//     avatar_file_id: string;
-//   };
-// };
+import { DomainMessageTypes } from '../messages/domain.messages';
 
 export type ValidationIssue<T = unknown> = {
   code: string;
@@ -39,12 +30,12 @@ const formatError = (error: ZodError): ValidationError => {
 };
 
 export class ValidationException extends DomainException {
-  static MESSAGE = 'VALIDATION_ERROR';
+  static MESSAGE = DomainMessageTypes.VALIDATION.key;
   public readonly errors?: ValidationError;
   constructor(zodError?: ZodError) {
     super({
-      code: ValidationException.MESSAGE,
-      type: DomainMessageType.VALIDATION,
+      code: DomainMessageTypes.VALIDATION.key,
+      type: DomainMessageTypes.VALIDATION,
     });
     this.errors = zodError != undefined ? formatError(zodError) : undefined;
   }

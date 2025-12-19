@@ -1,6 +1,6 @@
 import {
   DomainMessage,
-  DomainMessageType,
+  DomainMessageTypes,
 } from '../common/messages/domain.messages';
 
 export const AUTH_MESSAGES = {
@@ -9,35 +9,31 @@ export const AUTH_MESSAGES = {
 } satisfies Record<string, string>;
 
 export const AUTH_ERRORS = {
-  SUCCESS: {
-    code: 'SUCCESS',
-    type: DomainMessageType.SUCCESS,
-  },
   EMAIL_ALREADY_EXISTS: {
     code: 'EMAIL_ALREADY_EXISTS',
-    type: DomainMessageType.CONFLICT,
+    type: DomainMessageTypes.CONFLICT,
   },
   USERNAME_ALREADY_EXISTS: {
     code: 'USERNAME_ALREADY_EXISTS',
-    type: DomainMessageType.CONFLICT,
+    type: DomainMessageTypes.CONFLICT,
   },
   INVALID_CREDENTIALS: {
     code: 'INVALID_CREDENTIALS',
-    type: DomainMessageType.UNAUTHORIZED,
+    type: DomainMessageTypes.UNAUTHORIZED,
   },
 } satisfies Record<string, DomainMessage>;
 
 export const AUTH_VALIDATION_ERRORS = {
   TOO_LONG_PASSWORD: {
     code: 'TOO_LONG_PASSWORD',
-    type: DomainMessageType.VALIDATION,
+    type: DomainMessageTypes.VALIDATION,
   },
   TOO_SHORT_PASSWORD: {
     code: 'TOO_SHORT_PASSWORD',
-    type: DomainMessageType.VALIDATION,
+    type: DomainMessageTypes.VALIDATION,
   },
   PASSWORD_RULES: {
     code: 'PASSWORD_RULES',
-    type: DomainMessageType.VALIDATION,
+    type: DomainMessageTypes.VALIDATION,
   },
 } satisfies Record<string, DomainMessage>;

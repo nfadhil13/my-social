@@ -6,7 +6,9 @@ export class AuthValidation {
       .string(VALIDATION_ERRORS.REQUIRED)
       .email(VALIDATION_ERRORS.EMAIL_INVALID)
       .min(1, VALIDATION_ERRORS.REQUIRED),
-    name: z.string().min(1, VALIDATION_ERRORS.REQUIRED),
+    name: z
+      .string(VALIDATION_ERRORS.REQUIRED)
+      .min(1, VALIDATION_ERRORS.REQUIRED),
     username: z
       .string(VALIDATION_ERRORS.REQUIRED)
       .min(1, VALIDATION_ERRORS.REQUIRED)
