@@ -11,7 +11,8 @@ import { DomainMessageTypes } from '../../src/common/messages/domain.messages';
 import { VALIDATION_ERRORS } from '../../src/common/validation/validation.error';
 import { extractValidationErrors } from '../validation_error_extractor';
 import { Profile, User } from '../../src/common/prisma/client/client';
-import { AUTH_ERRORS } from '../../src/auth/auth.messages';
+import { AUTH_ERRORS, AUTH_MESSAGES } from '../../src/auth/auth.messages';
+import { LoginDto, LoginResponse } from '../../src/model/user/login.model';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication<App>;
@@ -27,28 +28,28 @@ describe('AuthController (e2e)', () => {
     await app.init();
   });
 
+  const user = <User>{
+    email: 'test@test.com',
+    username: 'test',
+    password_hash: 'P@ssw0rd41',
+    role: 'USER',
+    created_at: new Date(),
+    updated_at: new Date(),
+  };
+
+  const profile = <Profile>{
+    name: 'test',
+    bio: null,
+    avatar_file_id: null,
+    thumbnail_file_id: null,
+    created_at: new Date(),
+    updated_at: new Date(),
+  };
+
   describe('/register (POST)', () => {
     beforeEach(async () => {
       await authTestService.deleteAllUsers();
     });
-
-    const user = <User>{
-      email: 'test@test.com',
-      username: 'test',
-      password_hash: 'P@ssw0rd41',
-      role: 'USER',
-      created_at: new Date(),
-      updated_at: new Date(),
-    };
-
-    const profile = <Profile>{
-      name: 'test',
-      bio: null,
-      avatar_file_id: null,
-      thumbnail_file_id: null,
-      created_at: new Date(),
-      updated_at: new Date(),
-    };
 
     it('Should be registered successfully', async () => {
       const result = await request(app.getHttpServer())
@@ -139,6 +140,53 @@ describe('AuthController (e2e)', () => {
       expect(data).toBeNull();
       expect(success).toBe(false);
       expect(errors).toBeUndefined();
+    });
+  });
+
+  describe('/login (POST)', () => {
+    beforeEach(async () => {
+      await authTestService.deleteAllUsers();
+      await authTestService.createUser(user, profile);
+    });
+
+    it('Should be logged in successfully', async () => {
+      const result = await request(app.getHttpServer())
+        .post('/login')
+        .send(<LoginDto>{
+          email: user.email,
+          password: user.password_hash,
+        });
+      expect(result.status).toBe(200);
+      const { message, data, success } =
+        result.body as unknown as ResponseModel<LoginResponse>;
+      expect(message).toBe(AUTH_MESSAGES.USER_LOGGED_IN_SUCCESSFULLY);
+      expect(data).toBeDefined();
+      expect(success).toBe(true);
+      expect(data?.user.id).toBeDefined();
+      expect(data?.user.email).toBe(user.email);
+      expect(data?.user.username).toBe(user.username);
+      expect(data?.user.role).toBe(user.role);
+      expect(data?.accessToken).toBeDefined();
+    });
+
+    it('Should return validation errors', async () => {
+      const result = await request(app.getHttpServer())
+        .post('/login')
+        .send(<LoginDto>{
+          email: 'invalidemailtest.com',
+          password: 'P@ssw0rd41',
+        });
+      expect(result.status).toBe(DomainMessageTypes.VALIDATION.value);
+    });
+
+    it('Should return unauthorized error', async () => {
+      const result = await request(app.getHttpServer())
+        .post('/login')
+        .send(<LoginDto>{
+          email: 'test@test.com',
+          password: 'invalidpassword',
+        });
+      expect(result.status).toBe(DomainMessageTypes.UNAUTHORIZED.value);
     });
   });
 });
