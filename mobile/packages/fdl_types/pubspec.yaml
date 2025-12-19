@@ -1,0 +1,15 @@
+name: fdl_types
+description: FDL generic types package
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ^3.10.1
+
+dependencies:
+  equatable: ^2.0.7
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

@@ -1,0 +1,17 @@
+name: fdl_ui
+description: FDL UI components package
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ^3.10.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  intl: ^0.20.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
