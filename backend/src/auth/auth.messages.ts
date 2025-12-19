@@ -9,14 +9,6 @@ export const AUTH_MESSAGES = {
 } satisfies Record<string, string>;
 
 export const AUTH_ERRORS = {
-  EMAIL_ALREADY_EXISTS: {
-    code: 'EMAIL_ALREADY_EXISTS',
-    type: DomainMessageTypes.CONFLICT,
-  },
-  USERNAME_ALREADY_EXISTS: {
-    code: 'USERNAME_ALREADY_EXISTS',
-    type: DomainMessageTypes.CONFLICT,
-  },
   INVALID_CREDENTIALS: {
     code: 'INVALID_CREDENTIALS',
     type: DomainMessageTypes.UNAUTHORIZED,

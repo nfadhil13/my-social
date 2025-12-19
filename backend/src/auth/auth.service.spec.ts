@@ -1,29 +1,30 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
-import { PrismaService } from '../common/prisma/prisma.service';
-import { RegisterDto } from '../model/user/register.model';
+import { RegisterDto } from './dto/register.dto';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { type LoginDto } from '../model/user/login.model';
+import { type LoginDto } from './dto/login.dto';
 import { DomainException } from '../common/messages/domain.exception';
 import { AUTH_ERRORS } from './auth.messages';
+import { UserService } from '../user/user.service';
+import { USER_ERRORS } from '../user/user.messages';
 
 describe('AuthService', () => {
   let service: AuthService;
   let jwtService: DeepMockProxy<JwtService>;
-  let prismaService: DeepMockProxy<PrismaService>;
+  let userService: DeepMockProxy<UserService>;
 
   beforeEach(async () => {
-    prismaService = mockDeep<PrismaService>();
+    userService = mockDeep<UserService>();
     jwtService = mockDeep<JwtService>();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
         {
-          provide: PrismaService,
-          useValue: prismaService,
+          provide: UserService,
+          useValue: userService,
         },
         {
           provide: JwtService,
@@ -44,16 +45,7 @@ describe('AuthService', () => {
         name: 'test',
         username: 'test',
       };
-      prismaService.user.findUnique.mockResolvedValue(null);
-      prismaService.user.create.mockResolvedValue({
-        id: userId,
-        username: registerDto.username,
-        email: registerDto.email,
-        password_hash: 'test123',
-        role: 'USER',
-        created_at: new Date(),
-        updated_at: new Date(),
-      });
+      userService.createUser.mockResolvedValue(userId);
       const user = await service.register(registerDto);
       expect(user).toBeDefined();
       expect(user).toBe(userId);
@@ -66,21 +58,15 @@ describe('AuthService', () => {
         name: 'test',
         username: 'test',
       };
-      prismaService.user.findFirst.mockResolvedValue({
-        id: '123',
-        email: registerDto.email,
-        password_hash: 'test123',
-        role: 'USER',
-        username: 'USERNAME',
-        created_at: new Date(),
-        updated_at: new Date(),
-      });
+      userService.createUser.mockRejectedValue(
+        new DomainException(USER_ERRORS.EMAIL_ALREADY_EXISTS),
+      );
       try {
         await service.register(registerDto);
       } catch (error) {
         expect(error).toBeInstanceOf(DomainException);
         expect((error as DomainException).error).toBe(
-          AUTH_ERRORS.EMAIL_ALREADY_EXISTS,
+          USER_ERRORS.EMAIL_ALREADY_EXISTS,
         );
       }
     });
@@ -92,21 +78,15 @@ describe('AuthService', () => {
         name: 'test',
         username: 'test',
       };
-      prismaService.user.findFirst.mockResolvedValue({
-        id: '123',
-        email: 'other@test.com',
-        password_hash: 'test123',
-        role: 'USER',
-        username: registerDto.username,
-        created_at: new Date(),
-        updated_at: new Date(),
-      });
+      userService.createUser.mockRejectedValue(
+        new DomainException(USER_ERRORS.USERNAME_ALREADY_EXISTS),
+      );
       try {
         await service.register(registerDto);
       } catch (error) {
         expect(error).toBeInstanceOf(DomainException);
         expect((error as DomainException).error).toBe(
-          AUTH_ERRORS.USERNAME_ALREADY_EXISTS,
+          USER_ERRORS.USERNAME_ALREADY_EXISTS,
         );
       }
     });
@@ -120,14 +100,12 @@ describe('AuthService', () => {
         password: 'test123',
       };
       const hashedPassword = await bcrypt.hash('test123', 10);
-      prismaService.user.findUnique.mockResolvedValue({
+      userService.findByEmail.mockResolvedValue({
         id: '123',
         email: loginDto.email,
         password_hash: hashedPassword,
         role: 'USER',
         username: 'test',
-        created_at: new Date(),
-        updated_at: new Date(),
       });
       jwtService.signAsync.mockResolvedValue(accessToken);
       const user = await service.login(loginDto);
@@ -143,7 +121,7 @@ describe('AuthService', () => {
         email: 'test@test.com',
         password: 'test123',
       };
-      prismaService.user.findUnique.mockResolvedValue(null);
+      userService.findByEmail.mockResolvedValue(null);
       try {
         await service.login(loginDto);
       } catch (error) {
@@ -159,14 +137,12 @@ describe('AuthService', () => {
         email: 'test@test.com',
         password: 'test123',
       };
-      prismaService.user.findUnique.mockResolvedValue({
+      userService.findByEmail.mockResolvedValue({
         id: '123',
         email: loginDto.email,
         password_hash: 'test123',
         role: 'USER',
         username: 'test',
-        created_at: new Date(),
-        updated_at: new Date(),
       });
       try {
         await service.login(loginDto);

@@ -2,9 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
-import { RegisterDto } from '../model/user/register.model';
-import { ConflictException } from '@nestjs/common';
-import { LoginDto, LoginResponse } from '../model/user/login.model';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto, LoginResponse } from './dto/login.dto';
+import { AUTH_MESSAGES } from './auth.messages';
 
 describe('AuthController', () => {
   let authService: DeepMockProxy<AuthService>;
@@ -34,31 +34,10 @@ describe('AuthController', () => {
         username: 'test',
       };
       authService.register.mockResolvedValue(userId);
-      expect(await controller.register(registerDto)).toEqual({
-        message: 'USER_REGISTERED_SUCCESSFULLY',
-        data: userId,
-        success: true,
-      });
-    });
-    it('should throw an error if the user already exists', async () => {
-      const registerDto: RegisterDto = {
-        email: 'test@test.com',
-        password: 'test123',
-        name: 'test',
-        username: 'test',
-      };
-      authService.register.mockRejectedValue(
-        new ConflictException('Email already exists'),
-      );
-      try {
-        await controller.register(registerDto);
-      } catch (error) {
-        expect(error).toBeDefined();
-        if (!(error instanceof ConflictException)) {
-          fail('Error is not a ConflictException');
-        }
-        expect(error.message).toBe('Email already exists');
-      }
+      const result = await controller.register(registerDto);
+      expect(result.message).toBe(AUTH_MESSAGES.USER_REGISTERED_SUCCESSFULLY);
+      expect(result.data).toBe(userId);
+      expect(result.success).toBe(true);
     });
   });
 
@@ -72,10 +51,9 @@ describe('AuthController', () => {
       };
       authService.login.mockResolvedValue(<LoginResponse>{
         user: {
+          id: userId,
           email: 'test@test.com',
           username: 'test',
-          name: 'test',
-          id: userId,
           role: 'USER',
         },
         accessToken: accessToken,

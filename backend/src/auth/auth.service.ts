@@ -1,79 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { PrismaService } from '../common/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
-import { type RegisterDto } from '../model/user/register.model';
-import { LoginResponse, type LoginDto } from '../model/user/login.model';
-import { UserWhereUniqueInput } from '../common/prisma/client/models/User';
+import { type RegisterDto } from './dto/register.dto';
+import { LoginResponse, type LoginDto } from './dto/login.dto';
 import { AUTH_ERRORS } from './auth.messages';
 import { DomainException } from '../common/messages/domain.exception';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly userService: UserService,
     private readonly jwtService: JwtService,
   ) {}
 
   async register(registerDto: RegisterDto): Promise<string> {
-    const existingUser = await this.prisma.user.findFirst({
-      where: <UserWhereUniqueInput>{
-        OR: [
-          {
-            email: registerDto.email,
-          },
-          {
-            username: registerDto.username,
-          },
-        ],
-      },
-      select: {
-        email: true,
-        username: true,
-      },
-    });
-
-    if (existingUser) {
-      if (existingUser.email === registerDto.email) {
-        throw new DomainException(AUTH_ERRORS.EMAIL_ALREADY_EXISTS);
-      }
-      if (existingUser.username === registerDto.username) {
-        throw new DomainException(AUTH_ERRORS.USERNAME_ALREADY_EXISTS);
-      }
-    }
-    const { password, ...register } = registerDto;
-    const passwordHash = await bcrypt.hash(password, 10);
-    const user = await this.prisma.user.create({
-      data: {
-        email: register.email,
-        username: register.username,
-        password_hash: passwordHash,
-        profile: {
-          create: {
-            name: register.name,
-            bio: null,
-            avatar_file_id: null,
-            thumbnail_file_id: null,
-          },
-        },
-      },
-    });
-    return user.id;
+    return this.userService.createUser(registerDto);
   }
 
   async login(loginDto: LoginDto): Promise<LoginResponse> {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        email: loginDto.email,
-      },
-      select: {
-        id: true,
-        email: true,
-        password_hash: true,
-        username: true,
-        role: true,
-      } as const,
-    });
+    const user = await this.userService.findByEmail(loginDto.email);
     if (!user) throw new DomainException(AUTH_ERRORS.INVALID_CREDENTIALS);
     const isPasswordValid = await bcrypt.compare(
       loginDto.password,
@@ -83,8 +29,14 @@ export class AuthService {
       throw new DomainException(AUTH_ERRORS.INVALID_CREDENTIALS);
     }
     const accessToken = await this.jwtService.signAsync({ userId: user.id });
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password_hash, ...userWithoutPassword } = user;
-    return { user: userWithoutPassword, accessToken };
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+      },
+      accessToken,
+    };
   }
 }

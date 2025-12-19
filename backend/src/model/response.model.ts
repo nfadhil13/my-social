@@ -5,13 +5,10 @@ export class ResponseModel<T = unknown> {
   errors?: Record<string, any>;
 }
 
-Promise.prototype.toSuccessResponse = async function <T>(
-  message: string,
-): Promise<ResponseModel<T>> {
-  const result = (await this) as T;
+export function successResponse<T>(data: T, message: string): ResponseModel<T> {
   return {
     message,
-    data: result,
+    data,
     success: true,
   };
-};
+}

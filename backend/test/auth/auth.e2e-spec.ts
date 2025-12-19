@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { RegisterDto } from '../../src/model/user/register.model';
 import { ResponseModel } from '../../src/model/response.model';
 import { AuthTestService } from './auth_test.service';
 import { AppModule } from '../../src/app.module';
@@ -11,8 +10,10 @@ import { DomainMessageTypes } from '../../src/common/messages/domain.messages';
 import { VALIDATION_ERRORS } from '../../src/common/validation/validation.error';
 import { extractValidationErrors } from '../validation_error_extractor';
 import { Profile, User } from '../../src/common/prisma/client/client';
-import { AUTH_ERRORS, AUTH_MESSAGES } from '../../src/auth/auth.messages';
-import { LoginDto, LoginResponse } from '../../src/model/user/login.model';
+import { AUTH_MESSAGES } from '../../src/auth/auth.messages';
+import { RegisterDto } from '../../src/auth/dto/register.dto';
+import { LoginDto, LoginResponse } from '../../src/auth/dto/login.dto';
+import { USER_ERRORS } from '../../src/user/user.messages';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication<App>;
@@ -53,7 +54,7 @@ describe('AuthController (e2e)', () => {
 
     it('Should be registered successfully', async () => {
       const result = await request(app.getHttpServer())
-        .post('/register')
+        .post('/auth/register')
         .send(<RegisterDto>{
           email: 'test@test.com',
           password: 'P@ssw0rd41',
@@ -75,7 +76,7 @@ describe('AuthController (e2e)', () => {
         username: 'InvaDlidUsername123',
       };
       const result = await request(app.getHttpServer())
-        .post('/register')
+        .post('/auth/register')
         .send(requestBody);
       expect(result.status).toBe(DomainMessageTypes.VALIDATION.value);
       const { message, data, success, errors } =
@@ -107,7 +108,7 @@ describe('AuthController (e2e)', () => {
     it('Should Return Conflict Error when email already exists', async () => {
       await authTestService.createUser(user, profile);
       const result = await request(app.getHttpServer())
-        .post('/register')
+        .post('/auth/register')
         .send(<RegisterDto>{
           email: user.email,
           password: user.password_hash,
@@ -117,7 +118,7 @@ describe('AuthController (e2e)', () => {
       expect(result.status).toBe(DomainMessageTypes.CONFLICT.value);
       const { message, data, success, errors } =
         result.body as unknown as ResponseModel<string>;
-      expect(message).toBe(AUTH_ERRORS.EMAIL_ALREADY_EXISTS.code);
+      expect(message).toBe(USER_ERRORS.EMAIL_ALREADY_EXISTS.code);
       expect(data).toBeNull();
       expect(success).toBe(false);
       expect(errors).toBeUndefined();
@@ -126,7 +127,7 @@ describe('AuthController (e2e)', () => {
     it('Should Return Conflict Error when username already exists', async () => {
       await authTestService.createUser(user, profile);
       const result = await request(app.getHttpServer())
-        .post('/register')
+        .post('/auth/register')
         .send(<RegisterDto>{
           email: 'newemail@test.com',
           password: 'P@ssw0rd41',
@@ -136,7 +137,7 @@ describe('AuthController (e2e)', () => {
       expect(result.status).toBe(DomainMessageTypes.CONFLICT.value);
       const { message, data, success, errors } =
         result.body as unknown as ResponseModel<string>;
-      expect(message).toBe(AUTH_ERRORS.USERNAME_ALREADY_EXISTS.code);
+      expect(message).toBe(USER_ERRORS.USERNAME_ALREADY_EXISTS.code);
       expect(data).toBeNull();
       expect(success).toBe(false);
       expect(errors).toBeUndefined();
@@ -151,7 +152,7 @@ describe('AuthController (e2e)', () => {
 
     it('Should be logged in successfully', async () => {
       const result = await request(app.getHttpServer())
-        .post('/login')
+        .post('/auth/login')
         .send(<LoginDto>{
           email: user.email,
           password: user.password_hash,
@@ -171,7 +172,7 @@ describe('AuthController (e2e)', () => {
 
     it('Should return validation errors', async () => {
       const result = await request(app.getHttpServer())
-        .post('/login')
+        .post('/auth/login')
         .send(<LoginDto>{
           email: 'invalidemailtest.com',
           password: 'P@ssw0rd41',
@@ -181,7 +182,7 @@ describe('AuthController (e2e)', () => {
 
     it('Should return unauthorized error', async () => {
       const result = await request(app.getHttpServer())
-        .post('/login')
+        .post('/auth/login')
         .send(<LoginDto>{
           email: 'test@test.com',
           password: 'invalidpassword',
