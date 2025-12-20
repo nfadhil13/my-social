@@ -1,5 +1,4 @@
 import 'package:fdl_types/fdl_types.dart';
-import 'package:fdl_types/fdl_types.dart';
 import 'package:my_social/features/auth/domain/entities/login_form.dart';
 import 'package:my_social/features/auth/domain/entities/register_form.dart';
 import 'package:my_social/features/auth/domain/entities/user.dart';

@@ -2,7 +2,6 @@ import 'package:my_social/features/auth/presentation/pages/login/login_page.dart
 import 'package:my_social/features/auth/presentation/pages/register/register_page.dart';
 import 'package:my_social/features/home/presentation/pages/home/home_page.dart';
 import 'package:my_social/features/landing/presentation/pages/landing/landing_page.dart';
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 part 'routes.dart';

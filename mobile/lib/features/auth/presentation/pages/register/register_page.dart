@@ -5,6 +5,7 @@ import 'package:my_social/core/router/router.dart';
 import 'package:my_social/core/service_locator/service_locator.dart';
 import 'package:my_social/core/localization/i18n/strings.g.dart';
 import 'package:my_social/features/auth/domain/entities/register_form.dart';
+import 'package:my_social/features/auth/domain/entities/user.dart';
 import 'package:my_social/features/auth/presentation/cubits/register/register_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -68,15 +69,15 @@ class _FormContent extends StatelessWidget {
       child: Builder(
         builder: (context) {
           final form = context.fdlForm<RegisterFormEntity>();
-          return BlocListener<RegisterCubit, RegisterState>(
+          return BlocListener<RegisterCubit, RegisterFormState>(
             listener: (context, state) {
-              if (state is RegisterSuccess) {
+              if (state is RegisterFormSubmitSuccess) {
                 context.showSuccessSnackbar(
                   context.translations.registerSuccess,
                 );
                 context.go(AppRoutes.home);
               }
-              if (state is RegisterError) {
+              if (state is RegisterFormSubmitError) {
                 form.setError(state.errors);
                 context.showErrorSnackbar(
                   context.localizeMessage(state.exception.message),

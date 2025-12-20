@@ -1,4 +1,4 @@
-library fdl_bloc;
+library;
 
 export 'widgets/bloc_provider_wrapper.dart';
 export 'form_cubit/form_cubit.dart';

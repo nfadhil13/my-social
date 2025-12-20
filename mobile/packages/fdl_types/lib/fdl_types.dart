@@ -1,7 +1,6 @@
-library fdl_types;
+library;
 
 export 'image/image.dart';
-export 'image/image_flutter.dart';
 export 'result/result.dart';
 export 'repo_result/repo_result.dart';
 export 'mapper/mapper.dart';

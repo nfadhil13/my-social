@@ -68,13 +68,13 @@ class _FormContent extends StatelessWidget {
       child: Builder(
         builder: (context) {
           final form = context.fdlForm<LoginFormEntity>();
-          return BlocListener<LoginCubit, LoginState>(
+          return BlocListener<LoginCubit, LoginCubitState>(
             listener: (context, state) {
-              if (state is LoginSuccess) {
+              if (state is LoginCubitSubmitSuccess) {
                 context.showSuccessSnackbar(context.translations.loginSuccess);
                 context.go(AppRoutes.home);
               }
-              if (state is LoginError) {
+              if (state is LoginCubitSubmitError) {
                 form.setError(state.errors);
                 context.showErrorSnackbar(
                   context.localizeMessage(state.exception.message),
