@@ -1,4 +1,4 @@
-import 'package:my_social/core/session_handler/session.dart';
+import 'package:fdl_core/fdl_core.dart';
 import 'package:fdl_types/fdl_types.dart';
 import 'package:injectable/injectable.dart';
 

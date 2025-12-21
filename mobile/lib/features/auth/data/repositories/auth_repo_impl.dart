@@ -1,5 +1,5 @@
 import 'package:fdl_types/fdl_types.dart';
-import 'package:my_social/core/session_handler/session.dart';
+import 'package:fdl_core/fdl_core.dart';
 import 'package:my_social/features/auth/data/datasources/auth_local_dts.dart';
 import 'package:my_social/features/auth/data/datasources/auth_network_dts.dart';
 import 'package:my_social/features/auth/domain/entities/login_form.dart';

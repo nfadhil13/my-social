@@ -23,7 +23,6 @@ class MyApp extends StatelessWidget {
           return MaterialApp.router(
             title: t.appTitle,
             routerConfig: AppRouter.router,
-
             supportedLocales: AppLocaleUtils.supportedLocales,
             locale: TranslationProvider.of(context).flutterLocale,
             builder: (context, child) =>

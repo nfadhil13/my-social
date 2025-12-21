@@ -18,7 +18,7 @@ import 'package:my_social/core/session_handler/mocked/session_handler_mocked_imp
     as _i1066;
 import 'package:my_social/core/session_handler/mocked/session_mocked_mapper.dart'
     as _i729;
-import 'package:my_social/core/session_handler/session.dart' as _i1023;
+import 'package:fdl_core/fdl_core.dart' as _i1023;
 import 'package:my_social/features/auth/data/datasources/auth_local_dts.dart'
     as _i468;
 import 'package:my_social/features/auth/data/datasources/auth_network_dts.dart'

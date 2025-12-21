@@ -1,17 +1,17 @@
 import 'package:my_social/core/db/secure_storage/secure_storage.dart';
-import 'package:my_social/core/env/environment.dart';
-import 'package:my_social/core/session_handler/mocked/session_mocked_mapper.dart';
 import 'package:fdl_core/fdl_core.dart';
 import 'package:injectable/injectable.dart';
+import 'package:my_social/core/env/environment.dart';
+import 'package:my_social/core/session_handler/network/network_session.dart';
 
-@LazySingleton(as: SessionHandler, env: [AppEnvironment.mocked])
-class SessionHandlerMockedImpl implements SessionHandler {
+@LazySingleton(as: SessionHandler, env: AppEnvironment.apiEnvironments)
+class SessionHandlerNetworkImpl implements SessionHandler {
   final SecureStorage _secureStorage;
-  final SessionMockedMapper _mapper;
+  final NetworkSessionMapper _mapper;
 
-  static const String sessionKey = 'FDL_SESSION_KEY';
+  static const String sessionKey = 'MY_SOCIAL_SESSION_KEY';
 
-  SessionHandlerMockedImpl(this._secureStorage, this._mapper);
+  SessionHandlerNetworkImpl(this._secureStorage, this._mapper);
 
   @override
   Future<Session?> getSession() async {
@@ -22,7 +22,7 @@ class SessionHandlerMockedImpl implements SessionHandler {
 
   @override
   Future<void> setSession(Session session) {
-    if (session is! SessionMocked) {
+    if (session is! NetworkSession) {
       throw ArgumentError('Session must be SessionMocked');
     }
     return _secureStorage.saveJson(sessionKey, _mapper.toJson(session));

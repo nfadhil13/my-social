@@ -34,6 +34,9 @@ dependencies:
     path: packages/fdl_types
   fdl_bloc:
     path: packages/fdl_bloc
+  fdl_core:
+    path: packages/fdl_core
+  dio: ^5.9.0
 
 dev_dependencies:
   injectable_generator: ^2.7.0

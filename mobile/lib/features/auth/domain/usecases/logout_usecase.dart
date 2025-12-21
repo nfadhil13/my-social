@@ -1,5 +1,5 @@
 import 'package:fdl_types/fdl_types.dart';
-import 'package:my_social/core/types/usecase.dart';
+import 'package:fdl_core/fdl_core.dart';
 import 'package:my_social/features/auth/domain/repositories/auth_repo.dart';
 import 'package:injectable/injectable.dart';
 
