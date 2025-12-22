@@ -1,3 +1,5 @@
+import 'package:fdl_core/api_client/api_client.dart';
+import 'package:fdl_core/session_handler/session.dart';
 import 'package:my_social/core/service_locator/service_locator.config.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
