@@ -20,8 +20,6 @@
     "test:e2e": "NODE_ENV=test yarn node --experimental-vm-modules $(yarn bin jest) --config ./test/jest-e2e.json --detectOpenHandles",
     "migrate:postgres": "dotenv -e .env -- npx prisma migrate deploy",
     "migrate:postgres-test": "dotenv -e .env.test.local -- npx prisma migrate deploy"
-
-
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -29,6 +27,7 @@
     "@nestjs/core": "^11.0.1",
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/swagger": "^11.2.3",
     "@prisma/adapter-pg": "^7.1.0",
     "@prisma/client": "^7.1.0",
     "@types/bcrypt": "^6.0.0",
@@ -37,7 +36,9 @@
     "prisma": "^7.1.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "zod": "^4.1.13"
+    "zod": "^4.1.13",
+    "zod-class": "^0.0.18",
+    "zod-openapi": "^5.4.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -80,7 +81,6 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
-    "setupFilesAfterEnv": [
-    ]
+    "setupFilesAfterEnv": []
   }
 }

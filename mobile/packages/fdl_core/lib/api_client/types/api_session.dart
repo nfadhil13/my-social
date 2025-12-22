@@ -1,4 +1,4 @@
-part of 'api_client.dart';
+part of '../api_client.dart';
 
 class APISession {
   final Map<String, String>? headers;
