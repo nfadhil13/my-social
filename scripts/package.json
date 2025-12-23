@@ -1,0 +1,13 @@
+{
+  "name": "scripts",
+  "private": true,
+  "scripts": {
+    "generate-dart-sdk": "bun run src/main.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
