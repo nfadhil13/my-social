@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from './user.service';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { PrismaService } from '../common/prisma/prisma.service';
-import { RegisterDto } from '../auth/dto/register.dto';
+import { RegisterRequest } from '../auth/dto/request/RegisterRequest';
 import { DomainException } from '../common/messages/domain.exception';
 import { USER_ERRORS } from './user.messages';
 
@@ -29,7 +29,7 @@ describe('UserService', () => {
   describe('createUser', () => {
     it('should create a new user', async () => {
       const userId = '123';
-      const registerDto: RegisterDto = {
+      const registerDto: RegisterRequest = {
         email: 'test@test.com',
         password: 'test123',
         name: 'test',
@@ -47,11 +47,11 @@ describe('UserService', () => {
       });
       const user = await service.createUser(registerDto);
       expect(user).toBeDefined();
-      expect(user).toBe(userId);
+      expect(user.id).toBe(userId);
     });
 
     it('should throw an error if the email already exists', async () => {
-      const registerDto: RegisterDto = {
+      const registerDto: RegisterRequest = {
         email: 'test@test.com',
         password: 'test123',
         name: 'test',
@@ -77,7 +77,7 @@ describe('UserService', () => {
     });
 
     it('should throw an error if the username already exists', async () => {
-      const registerDto: RegisterDto = {
+      const registerDto: RegisterRequest = {
         email: 'test@test.com',
         password: 'test123',
         name: 'test',

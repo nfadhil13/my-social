@@ -1,16 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../common/prisma/prisma.service';
-import { type RegisterDto } from '../auth/dto/register.dto';
+import { type RegisterRequest } from '../auth/dto/request/RegisterRequest';
 import { UserWhereUniqueInput } from '../common/prisma/client/models/User';
 import { DomainException } from '../common/messages/domain.exception';
 import { USER_ERRORS } from './user.messages';
+import { UserResponse } from '../auth/dto/response/UserResponse';
 
 @Injectable()
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createUser(registerDto: RegisterDto): Promise<string> {
+  async createUser(registerDto: RegisterRequest): Promise<UserResponse> {
     const existingUser = await this.prisma.user.findFirst({
       where: <UserWhereUniqueInput>{
         OR: [
@@ -54,9 +55,12 @@ export class UserService {
       },
       select: {
         id: true,
+        email: true,
+        username: true,
+        role: true,
       },
     });
-    return user.id;
+    return user;
   }
 
   async findByEmail(email: string) {

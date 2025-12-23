@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { type RegisterDto } from './dto/register.dto';
-import { LoginResponse, type LoginDto } from './dto/login.dto';
+import { type RegisterRequest } from './dto/request/RegisterRequest';
 import { AUTH_ERRORS } from './auth.messages';
 import { DomainException } from '../common/messages/domain.exception';
 import { UserService } from '../user/user.service';
+import { LoginResponse } from './dto/response/LoginResponse';
+import { LoginRequest } from './dto/request/LoginRequest';
+import { UserResponse } from './dto/response/UserResponse';
 
 @Injectable()
 export class AuthService {
@@ -14,11 +16,11 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(registerDto: RegisterDto): Promise<string> {
+  async register(registerDto: RegisterRequest): Promise<UserResponse> {
     return this.userService.createUser(registerDto);
   }
 
-  async login(loginDto: LoginDto): Promise<LoginResponse> {
+  async login(loginDto: LoginRequest): Promise<LoginResponse> {
     const user = await this.userService.findByEmail(loginDto.email);
     if (!user) throw new DomainException(AUTH_ERRORS.INVALID_CREDENTIALS);
     const isPasswordValid = await bcrypt.compare(
@@ -28,7 +30,10 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new DomainException(AUTH_ERRORS.INVALID_CREDENTIALS);
     }
-    const accessToken = await this.jwtService.signAsync({ userId: user.id });
+    const accessToken = await this.jwtService.signAsync(
+      { userId: user.id },
+      { expiresIn: '1h' },
+    );
     return {
       user: {
         id: user.id,

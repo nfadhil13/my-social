@@ -29,7 +29,6 @@ export const ApiOkResponseCustom = <T extends Type<unknown>>(data: T) =>
   applyDecorators(
     ApiExtraModels(ResponseModel, data),
     ApiOkResponse({
-      description: `The paginated result of ${data.name}`,
       schema: {
         allOf: [
           { $ref: getSchemaPath(ResponseModel) },

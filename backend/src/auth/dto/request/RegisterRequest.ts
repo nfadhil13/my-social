@@ -1,8 +1,8 @@
 import { Z } from 'zod-class';
-import { AuthValidation } from './auth.validation';
+import { AuthValidation } from '../auth.validation';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class RegisterDto extends Z.class(AuthValidation.REGISTER.shape) {
+export class RegisterRequest extends Z.class(AuthValidation.REGISTER.shape) {
   @ApiProperty({
     description: 'User email',
     example: 'test@example.com',

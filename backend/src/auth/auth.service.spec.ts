@@ -1,14 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
-import { RegisterDto } from './dto/register.dto';
+import { RegisterRequest } from './dto/request/RegisterRequest';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { type LoginDto } from './dto/login.dto';
 import { DomainException } from '../common/messages/domain.exception';
 import { AUTH_ERRORS } from './auth.messages';
 import { UserService } from '../user/user.service';
 import { USER_ERRORS } from '../user/user.messages';
+import { LoginRequest } from './dto/request/LoginRequest';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -39,20 +39,25 @@ describe('AuthService', () => {
   describe('register', () => {
     it('should register a new user', async () => {
       const userId = '123';
-      const registerDto: RegisterDto = {
+      const registerDto: RegisterRequest = {
         email: 'test@test.com',
         password: 'test123',
         name: 'test',
         username: 'test',
       };
-      userService.createUser.mockResolvedValue(userId);
+      userService.createUser.mockResolvedValue({
+        id: userId,
+        email: registerDto.email,
+        username: registerDto.username,
+        role: 'USER',
+      });
       const user = await service.register(registerDto);
       expect(user).toBeDefined();
       expect(user).toBe(userId);
     });
 
     it('should throw an error if the email already exists', async () => {
-      const registerDto: RegisterDto = {
+      const registerDto: RegisterRequest = {
         email: 'test@test.com',
         password: 'test123',
         name: 'test',
@@ -72,7 +77,7 @@ describe('AuthService', () => {
     });
 
     it('should throw an error if the username already exists', async () => {
-      const registerDto: RegisterDto = {
+      const registerDto: RegisterRequest = {
         email: 'test@test.com',
         password: 'test123',
         name: 'test',
@@ -95,7 +100,7 @@ describe('AuthService', () => {
   describe('login', () => {
     it('should login a user', async () => {
       const accessToken = 'ACCESS_TOKEN';
-      const loginDto: LoginDto = {
+      const loginDto: LoginRequest = {
         email: 'test@test.com',
         password: 'test123',
       };
@@ -117,7 +122,7 @@ describe('AuthService', () => {
     });
 
     it('should throw an error if the user does not exist', async () => {
-      const loginDto: LoginDto = {
+      const loginDto: LoginRequest = {
         email: 'test@test.com',
         password: 'test123',
       };
@@ -133,7 +138,7 @@ describe('AuthService', () => {
     });
 
     it('should throw an error if the password is incorrect', async () => {
-      const loginDto: LoginDto = {
+      const loginDto: LoginRequest = {
         email: 'test@test.com',
         password: 'test123',
       };

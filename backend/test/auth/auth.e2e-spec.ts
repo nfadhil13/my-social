@@ -11,7 +11,7 @@ import { VALIDATION_ERRORS } from '../../src/common/validation/validation.error'
 import { extractValidationErrors } from '../validation_error_extractor';
 import { Profile, User } from '../../src/common/prisma/client/client';
 import { AUTH_MESSAGES } from '../../src/auth/auth.messages';
-import { RegisterDto } from '../../src/auth/dto/register.dto';
+import { RegisterRequest } from '../../src/auth/dto/request/RegisterRequest';
 import { LoginDto, LoginResponse } from '../../src/auth/dto/login.dto';
 import { USER_ERRORS } from '../../src/user/user.messages';
 
@@ -55,7 +55,7 @@ describe('AuthController (e2e)', () => {
     it('Should be registered successfully', async () => {
       const result = await request(app.getHttpServer())
         .post('/auth/register')
-        .send(<RegisterDto>{
+        .send(<RegisterRequest>{
           email: 'test@test.com',
           password: 'P@ssw0rd41',
           name: 'test',
@@ -70,7 +70,7 @@ describe('AuthController (e2e)', () => {
     });
 
     it('Should return validation errors', async () => {
-      const requestBody = <RegisterDto>{
+      const requestBody = <RegisterRequest>{
         email: 'testtest.com',
         password: 'P@ssw0rd41',
         username: 'InvaDlidUsername123',
@@ -109,7 +109,7 @@ describe('AuthController (e2e)', () => {
       await authTestService.createUser(user, profile);
       const result = await request(app.getHttpServer())
         .post('/auth/register')
-        .send(<RegisterDto>{
+        .send(<RegisterRequest>{
           email: user.email,
           password: user.password_hash,
           name: 'NAME',
@@ -128,7 +128,7 @@ describe('AuthController (e2e)', () => {
       await authTestService.createUser(user, profile);
       const result = await request(app.getHttpServer())
         .post('/auth/register')
-        .send(<RegisterDto>{
+        .send(<RegisterRequest>{
           email: 'newemail@test.com',
           password: 'P@ssw0rd41',
           name: 'NAME',

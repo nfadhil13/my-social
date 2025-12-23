@@ -402,6 +402,16 @@ Authorization: Bearer <access_token>
 
 ---
 
+## 6 Cars
+
+## Get Car By Id
+
+**Get** `/car/:id`
+
+**Request**
+
+---
+
 ## 5️⃣ Files (Optional Public Access)
 
 ### Get File
