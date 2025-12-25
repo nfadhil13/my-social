@@ -6,6 +6,7 @@ import * as path from "path";
 import type { OpenAPISpec } from "./types";
 import { fetchJson } from "./fetchJSON";
 import { generateDartSdk } from "./generator";
+import { exec, execSync } from "child_process";
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
@@ -23,6 +24,9 @@ async function main(): Promise<void> {
   }
 
   generateDartSdk(spec, outputDir);
+
+  console.log(`Formating Generated SDK...`);
+  execSync(`dart format ${outputDir}`);
 
   console.log(`✅ SDK generated successfully at ${outputDir}`);
 }

@@ -86,7 +86,9 @@ function generateService(
     ? "import '../models/models.dart';"
     : "";
 
-  return `import 'package:fdl_core/fdl_core.dart';
+  return ` 
+  import 'package:fdl_core/fdl_core.dart';
+  import 'package:fdl_types/exception/exception.dart';
 ${modelsExport}
 
 class ${className} {
@@ -132,26 +134,34 @@ function generateMethod(
     "double",
   ].includes(responseType);
   const responseExtraction = isPrimitiveResponse
-    ? `return responseData as ${responseType};`
-    : `return ${responseType}.fromJson(responseData as Map<String, dynamic>);`;
+    ? ` response.data as ${responseType}`
+    : ` ${responseType}.fromJson(response.data)`;
 
   return `
-  Future<${responseType}> ${methodName}(${params}) async {
+  Future<ResponseModel<${responseType}>> ${methodName}(${params}) async {
     final response = await _client.${httpMethod}(
       path: '${pathWithParams}',${bodyParam}${queryMap}
     );
     
-    if (response.data != null && response.data is Map<String, dynamic>) {
-      final data = response.data as Map<String, dynamic>;
-      if (data.containsKey('data')) {
-        final responseData = data['data'];
-        if (responseData != null) {
-          ${responseExtraction}
-        }
-      }
+    if (response.data == null) {
+      return throw ApiException(
+        message: 'DATA_NULL',
+        statusCode: 500,
+        url: response.url,
+      );
     }
+    if (response.data is! Map<String, dynamic>) {
+      return throw ApiException(
+        message: 'DATA_UNKNOWN_TYPE',
+        statusCode: 500,
+        url: response.url,
+      );
+    }
+    return ResponseModel.fromJson(
+    response.data,${responseExtraction});
+
     
-    throw Exception('Invalid response format');
+
   }
 `;
 }

@@ -7,4 +7,7 @@ export class LoginResponse {
 
   @ApiProperty({ description: 'Access token', type: String })
   accessToken: string;
+
+  @ApiProperty({ description: 'Refresh token', type: Date })
+  random?: Date;
 }

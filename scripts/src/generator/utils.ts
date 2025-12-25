@@ -41,13 +41,20 @@ export function getDartType(
   propName: string,
   ctx: GeneratorContext
 ): DartType {
-  // if (schema.$ref) {
-  //   const refName = schema.$ref.split("/").pop() as string;
-  //   if (ctx.schemas.has(refName)) {
-  //     return ctx.schemas.get(refName) as string;
-  //   }
-  //   return toPascalCase(refName);
-  // }
+  console.log(schema);
+  if (schema.$ref) {
+    const refName = schema.$ref.split("/").pop() as string;
+    if (ctx.schemas.has(refName)) {
+      return {
+        name: ctx.schemas.get(refName) as string,
+        type: "class",
+      };
+    }
+    return {
+      name: toPascalCase(refName),
+      type: "class",
+    };
+  }
   const schemaAllOf = schema.allOf;
   if (schemaAllOf != undefined && schemaAllOf.length > 0) {
     const firstRef = schemaAllOf[0]!.$ref;
@@ -132,6 +139,22 @@ export function getFromJsonValue(
     return `${className}.fromJson(${jsonPath} as Map<String, dynamic>)`;
   }
 
+  if (
+    schema.type === undefined &&
+    schema.allOf != undefined &&
+    schema.allOf.length > 0
+  ) {
+    const firstRef = schema.allOf[0]!.$ref;
+    if (firstRef) {
+      const refName = firstRef.split("/").pop() as string;
+      let className = ctx.schemas.get(refName);
+      if (!className) {
+        className = toPascalCase(refName);
+      }
+      return `${className}.fromJson(${jsonPath} as Map<String, dynamic>)`;
+    }
+  }
+
   if (schema.type === "array") {
     const itemType = schema.items
       ? getDartType(schema.items, "", ctx)
@@ -148,15 +171,36 @@ export function getFromJsonValue(
     return `${jsonPath} as List<${itemType}>`;
   }
 
-  return `${jsonPath} as ${getDartType(schema, propName, ctx)}`;
+  if (schema.type === "string" && schema.enum) {
+    return `${toPascalCase(propName)}.fromJson(${jsonPath} as String)`;
+  }
+
+  return `${jsonPath} as ${getDartType(schema, propName, ctx).name}`;
 }
 
 export function getToJsonValue(
   schema: OpenAPISchemaRef,
-  fieldName: string
+  fieldName: string,
+  ctx: GeneratorContext
 ): string {
   if (schema.$ref || (schema.type === "object" && schema.properties)) {
     return `${fieldName}.toJson()`;
+  }
+
+  if (
+    schema.type === undefined &&
+    schema.allOf != undefined &&
+    schema.allOf.length > 0
+  ) {
+    const firstRef = schema.allOf[0]!.$ref;
+    if (firstRef) {
+      const refName = firstRef.split("/").pop() as string;
+      return `${fieldName}.toJson()`;
+    }
+  }
+
+  if (schema.enum) {
+    return `${fieldName}.value`;
   }
 
   if (schema.type === "array" && schema.items?.$ref) {
@@ -230,6 +274,7 @@ export function getResponseType(
           return getPrimitiveDartType(dataSchema);
         }
         const dartType = getDartType(dataSchema, "", ctx);
+        console.log(dartType);
         return dartType.name;
       }
     }

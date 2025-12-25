@@ -28,6 +28,8 @@ dependencies:
   flutter_secure_storage: ^9.2.4
   slang: ^4.11.0
   slang_flutter: ^4.11.0
+  my_social_sdk:
+    path: packages/my_social_sdk
   fdl_ui:
     path: packages/fdl_ui
   fdl_types:

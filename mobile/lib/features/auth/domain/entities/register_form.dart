@@ -2,6 +2,7 @@ class RegisterFormEntity {
   String fullName;
   String email;
   String password;
+  String username;
   String confirmPassword;
 
   RegisterFormEntity({
@@ -9,5 +10,6 @@ class RegisterFormEntity {
     this.email = '',
     this.password = '',
     this.confirmPassword = '',
+    this.username = '',
   });
 }

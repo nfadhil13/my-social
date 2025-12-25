@@ -26,3 +26,14 @@ class ApiFormException extends ApiException {
   @override
   List<Object?> get props => [...super.props, errors];
 }
+
+class ApiParseException extends ApiException {
+  const ApiParseException({
+    required super.url,
+    required super.statusCode,
+    required super.message,
+  }) : super();
+
+  @override
+  List<Object?> get props => [...super.props];
+}

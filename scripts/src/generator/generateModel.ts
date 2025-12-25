@@ -10,7 +10,7 @@ import {
   toPascalCase,
   toSnakeCase,
 } from "./utils";
-import type { OpenAPISchema } from "../types";
+import type { OpenAPISchema, OpenAPISchemaRef } from "../types";
 
 export function generateModels(ctx: GeneratorContext): void {
   const schemas = ctx.spec.components?.schemas || {};
@@ -44,9 +44,11 @@ export function generateModels(ctx: GeneratorContext): void {
     ctx.schemas.set(schemaName, dartClassName);
   }
 
-  const modelsExport = Array.from(ctx.schemas.values())
+  let modelsExport = Array.from(ctx.schemas.values())
     .map((name) => `export '${toSnakeCase(name)}.dart';`)
     .join("\n");
+
+  modelsExport += `export 'response_model.dart';`;
 
   fs.writeFileSync(
     path.join(ctx.outputDir, "lib", "models", "models.dart"),
@@ -101,28 +103,22 @@ function generateModel(
       fieldName,
     });
     const isResponse = className.toLowerCase().endsWith("response");
-    // if (isResponse) {
-    //   toJsonBody += `      '${propName}': ${getToJsonValue(
-    //     propSchema,
-    //     fieldName
-    //   )},\n`;
-    // } else {
-    //   if (isRequired) {
-    //     fromJsonBody += `      ${fieldName}: ${getFromJsonValue(
-    //       propSchema,
-    //       `json['${propName}']`,
-    //       propName,
-    //       ctx
-    //     )},\n`;
-    //   } else {
-    //     fromJsonBody += `      ${fieldName}: json['${propName}'] != null ? ${getFromJsonValue(
-    //       propSchema,
-    //       `json['${propName}']`,
-    //       propName,
-    //       ctx
-    //     )} : null,\n`;
-    //   }
-    // }
+    if (isResponse) {
+      fromJsonBody += createFromJsonItem({
+        propSchema,
+        propName: dartType.type === "enum" ? fieldDartType : propName,
+        fieldName,
+        isRequired,
+        ctx,
+      });
+    } else {
+      toJsonBody += createToJsonItem({
+        propSchema,
+        propName: dartType.type === "enum" ? fieldDartType : propName,
+        fieldName,
+        ctx,
+      });
+    }
   }
 
   return createClass({
@@ -134,6 +130,121 @@ function generateModel(
     toJsonBody,
     enums,
   });
+}
+
+function createClass({
+  imports,
+  className,
+  fields,
+  constructorParams,
+  fromJsonBody,
+  toJsonBody,
+  enums,
+}: {
+  imports: string;
+  className: string;
+  fields: string;
+  constructorParams: string;
+  fromJsonBody: string;
+  toJsonBody: string;
+  enums: string;
+}): string {
+  return `${imports}
+class ${className} {
+${fields}
+
+
+${className}({ ${constructorParams} });
+
+${createFromJson({ className, fromJsonBody })}
+
+${createToJson({ className, toJsonBody })}
+
+}
+${enums}\n
+`;
+}
+
+function createFromJson({
+  className,
+  fromJsonBody,
+}: {
+  className: string;
+  fromJsonBody: string;
+}): string {
+  if (fromJsonBody.length === 0) return "";
+  if (!className.toLowerCase().endsWith("response")) return "";
+  return `
+  factory ${className}.fromJson(dynamic json) {
+    return ${className}(
+      ${fromJsonBody}
+    );
+  }
+  `;
+}
+
+function createToJson({
+  className,
+  toJsonBody,
+}: {
+  className: string;
+  toJsonBody: string;
+}): string {
+  if (toJsonBody.length === 0) return "";
+  if (className.toLowerCase().endsWith("response")) return "";
+  return `
+  dynamic toJson() {
+    return {
+      ${toJsonBody}
+    };
+  }
+  `;
+}
+
+function createToJsonItem({
+  fieldName,
+  propSchema,
+  propName,
+  ctx,
+}: {
+  fieldName: string;
+  propSchema: OpenAPISchemaRef;
+  propName: string;
+  ctx: GeneratorContext;
+}): string {
+  return `      '${toCamelCase(propName)}': ${getToJsonValue(
+    propSchema,
+    fieldName,
+    ctx
+  )},\n`;
+}
+function createFromJsonItem({
+  isRequired,
+  propSchema,
+  propName,
+  fieldName,
+  ctx,
+}: {
+  isRequired: boolean;
+  ctx: GeneratorContext;
+  propSchema: OpenAPISchemaRef;
+  propName: string;
+  fieldName: string;
+}): string {
+  if (isRequired) {
+    return `      ${fieldName}: ${getFromJsonValue(
+      propSchema,
+      `json['${propName}']`,
+      propName,
+      ctx
+    )},\n`;
+  }
+  return `      ${fieldName}: json['${propName}'] != null ? ${getFromJsonValue(
+    propSchema,
+    `json['${propName}']`,
+    propName,
+    ctx
+  )} : null,\n`;
 }
 
 function createImportString({ dartType }: { dartType: string }): string {
@@ -162,33 +273,6 @@ function createConstructorParamsString({
   return `${isRequired ? "required " : ""}this.${fieldName},\n    `;
 }
 
-function createClass({
-  imports,
-  className,
-  fields,
-  constructorParams,
-  fromJsonBody,
-  toJsonBody,
-  enums,
-}: {
-  imports: string;
-  className: string;
-  fields: string;
-  constructorParams: string;
-  fromJsonBody: string;
-  toJsonBody: string;
-  enums: string;
-}): string {
-  return `${imports}
-class ${className} {
-${fields}
-${className}({ ${constructorParams} });
-
-}
-${enums}\n
-`;
-}
-
 function createEnum({
   name,
   values,
@@ -197,9 +281,41 @@ function createEnum({
   values: string[];
 }): string {
   return `enum ${name} {
+
+
     ${values
-      .map((value) => `  ${toCamelCase(value.toLowerCase())}`)
-      .join("\n, ")}
+      .map((value) => `  ${toCamelCase(value.toLowerCase())}('${value}')`)
+      .join("\n, ")};
+    
+    final String value;
+
+    const ${name}(this.value);
+
+    static ${name} fromJson(String value) {
+      return ${name}.values.firstWhere((e) => e.value == value);
+    }
   }
   `;
+}
+
+export function generateResponseModel({ ctx }: { ctx: GeneratorContext }) {
+  const responseModelCode = `class ResponseModel<T> {
+    final String message;
+    final T data;
+
+    ResponseModel({ required this.message, required this.data });
+
+    static ResponseModel<T> fromJson<T>(dynamic json, T data) {
+      return ResponseModel<T>(
+        message: json['message'],
+        data: data,
+      );
+    }
+  }
+  `;
+
+  fs.writeFileSync(
+    path.join(ctx.outputDir, "lib", "models", "response_model.dart"),
+    responseModelCode
+  );
 }

@@ -3,7 +3,7 @@ import * as path from "path";
 
 import type { OpenAPISpec } from "../types";
 import { generateMainExport } from "./generateMainExport";
-import { generateModels } from "./generateModel";
+import { generateModels, generateResponseModel } from "./generateModel";
 import { generateServices } from "./generateServices";
 import type { GeneratorContext } from "./utils";
 
@@ -15,8 +15,9 @@ export function generateDartSdk(spec: OpenAPISpec, outputDir: string): void {
   };
 
   ensureOutputDir(ctx);
+  generateResponseModel({ ctx });
   generateModels(ctx);
-  // generateServices(ctx);
+  generateServices(ctx);
   generateMainExport(ctx);
 }
 

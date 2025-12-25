@@ -2,13 +2,17 @@ part of 'service_locator.dart';
 
 @module
 abstract class CoreModule {
-  @Named('baseURL')
-  String getBaseURL() => 'https://api.my-social.com';
-
   FlutterSecureStorage getFlutterSecureStorage() => FlutterSecureStorage();
 
+  AppEnvironment getAppEnvironment() => AppEnvironmentLocal();
+
   ApiClient getApiClient(
-    @Named('baseURL') String baseURL,
+    AppEnvironment appEnvironment,
     SessionHandler sessionHandler,
-  ) => ApiClientImpl(baseURL: baseURL, sessionHandler: sessionHandler);
+  ) => ApiClientImpl(
+    baseURL: appEnvironment.baseURL,
+    sessionHandler: sessionHandler,
+  );
+
+  MySocialSdk getMySocialSdk(ApiClient apiClient) => MySocialSdk(apiClient);
 }
