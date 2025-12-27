@@ -5,6 +5,8 @@
   "emailPlaceholder": "john@example.com",
   "password": "Password",
   "signIn": "Sign In",
+  "username": "Username",
+  "usernamePlaceholder": "john_doe",
   "dontHaveAccount": "Don't have an account?",
   "createAccount": "Create Account",
   "userNotFound": "User not found",
@@ -19,6 +21,13 @@
   "alreadyHaveAccount": "Already have an account?",
   "registerSuccess": "Account created successfully",
   "loginSuccess": "Login successful",
-  "appTitle": "My Social"
+  "appTitle": "My Social",
+  "apiError": {
+    "formError": {
+      "REQUIRED" : "This field is required",
+      "USERNAME_EXISTS" : "Username already exists"
+    
+    }
+  }
 }
 

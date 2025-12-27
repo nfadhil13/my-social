@@ -17,11 +17,10 @@ class AuthRepoImpl implements AuthRepo {
   AuthRepoImpl(this._authNetworkDts, this._authLocalDts, this._sessionHandler);
 
   @override
-  Future<RepoResult<UserEntity>> login(LoginFormEntity loginForm) async {
-    final user = await _authNetworkDts.login(loginForm);
-    await _authLocalDts.saveUser(user);
-    await _sessionHandler.setSession(SessionMocked(userId: user.id));
-    return RepoResult(data: user);
+  Future<RepoResult<Nothing>> login(LoginFormEntity loginForm) async {
+    final (session, message) = await _authNetworkDts.login(loginForm);
+    await _sessionHandler.setSession(session);
+    return RepoResult(data: const Nothing(), message: message);
   }
 
   @override
@@ -32,11 +31,8 @@ class AuthRepoImpl implements AuthRepo {
   }
 
   @override
-  Future<RepoResult<UserEntity>> register(
-    RegisterFormEntity registerForm,
-  ) async {
-    final user = await _authNetworkDts.register(registerForm);
-    await _authLocalDts.saveUser(user);
-    return RepoResult(data: user);
+  Future<RepoResult<Nothing>> register(RegisterFormEntity registerForm) async {
+    final result = await _authNetworkDts.register(registerForm);
+    return RepoResult(data: const Nothing(), message: result);
   }
 }

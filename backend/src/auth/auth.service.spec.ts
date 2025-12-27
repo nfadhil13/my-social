@@ -53,7 +53,7 @@ describe('AuthService', () => {
       });
       const user = await service.register(registerDto);
       expect(user).toBeDefined();
-      expect(user).toBe(userId);
+      expect(user.id).toBe(userId);
     });
 
     it('should throw an error if the email already exists', async () => {

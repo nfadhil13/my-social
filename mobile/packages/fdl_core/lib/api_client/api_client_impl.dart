@@ -75,7 +75,6 @@ class ApiClientImpl extends ApiClient {
     required String path,
     Map<String, String>? headers,
     body,
-
     Map<String, dynamic>? query,
     bool shouldPrint = false,
     MockedResult? mockResult,
@@ -154,6 +153,9 @@ class ApiClientImpl extends ApiClient {
       if (shouldPrint) {
         debugPrint("Error APIClientImpl: $e");
         debugPrintStack(stackTrace: stackTrace);
+        if (e is DioException) {
+          ErrorLogger().logResponse(e);
+        }
       }
       throw errorHandler.handleError(e, path);
     }
@@ -168,5 +170,82 @@ class _DioFactory {
   }) {
     return inputDio ?? Dio(BaseOptions(baseUrl: baseURL))
       ..interceptors.add(SessionInterceptor(getUserSession: sessionHandler));
+  }
+}
+
+class ErrorLogger {
+  void logResponse(DioException error) {
+    _printResponse(
+      error.response!,
+      error.requestOptions.path,
+      requestBody: error.requestOptions.data,
+      headers: error.requestOptions.headers,
+      query: error.requestOptions.queryParameters,
+    );
+  }
+
+  void _printResponse(
+    Response response,
+    String url, {
+    dynamic requestBody,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? query,
+  }) {
+    if (kReleaseMode) return;
+    debugPrint("====^^^^^^^^^^^^^^^===");
+    debugPrint("URL : ${url}");
+    debugPrint("Method : ${response.requestOptions.method}");
+    if (headers != null) {
+      debugPrint("====== Headers =====");
+      _printJSONSafely(jsonEncode(headers));
+    }
+
+    final finalQuery = query;
+    if (finalQuery != null) {
+      debugPrint("==== Queries ====");
+      _printJSONSafely(jsonEncode(finalQuery));
+    }
+
+    if (requestBody != null) {
+      debugPrint("====== Request Body =====");
+      if (requestBody is List || requestBody is Map<String, dynamic>) {
+        _printJSONSafely(jsonEncode(requestBody));
+      } else if (requestBody is String) {
+        debugPrint("Body String : $requestBody");
+      }
+    }
+    debugPrint("====== Response =====");
+    debugPrint("Status Code : ${response.statusCode}");
+    debugPrint("====== Response Header =====");
+    _printJSONSafely(jsonEncode(response.headers.map));
+    debugPrint("====== Response Body =====");
+    final responseBody = response.data;
+    _printJSONSafely(jsonEncode(responseBody));
+    debugPrint("===vvvvvvvvvvvvvvvvv==");
+  }
+
+  dynamic tryDecode(String jsonString) {
+    try {
+      return jsonDecode(jsonString);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  void _printJSONSafely(String body) {
+    try {
+      if (body.isEmpty) {
+        debugPrint("Empty Body");
+      } else {
+        JsonDecoder decoder = const JsonDecoder();
+        final object = decoder.convert(body);
+        JsonEncoder encoder = const JsonEncoder.withIndent('  ');
+        String prettyprint = encoder.convert(object);
+        prettyprint.split('\n').forEach((element) => debugPrint(element));
+      }
+    } catch (e) {
+      debugPrint("UnFormatted");
+      debugPrint(body);
+    }
   }
 }

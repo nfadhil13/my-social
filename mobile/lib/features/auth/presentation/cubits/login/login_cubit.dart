@@ -1,19 +1,18 @@
 import 'package:fdl_bloc/fdl_bloc.dart';
 import 'package:fdl_types/fdl_types.dart';
 import 'package:my_social/features/auth/domain/entities/login_form.dart';
-import 'package:my_social/features/auth/domain/entities/user.dart';
 import 'package:my_social/features/auth/domain/usecases/login_usecase.dart';
 import 'package:injectable/injectable.dart';
 
 @injectable
-class LoginCubit extends FormCubit<Nothing, LoginFormEntity, UserEntity> {
+class LoginCubit extends FormCubit<Nothing, LoginFormEntity, Nothing> {
   final LoginUsecase _loginUsecase;
 
   LoginCubit(this._loginUsecase)
     : super(initialState: FormCubitReady(initialData: Nothing()));
 
   @override
-  Future<Resource<UserEntity>> submitUsecase(LoginFormEntity data) {
+  Future<Resource<Nothing>> submitUsecase(LoginFormEntity data) {
     return _loginUsecase(data);
   }
 
@@ -22,10 +21,10 @@ class LoginCubit extends FormCubit<Nothing, LoginFormEntity, UserEntity> {
   }
 }
 
-typedef LoginCubitState = FormCubitState<Nothing, UserEntity>;
-typedef LoginCubitPreparing = FormCubitPreparing<Nothing, UserEntity>;
-typedef LoginCubitReady = FormCubitReady<Nothing, UserEntity>;
-typedef LoginCubitPrepareError = FormCubitPrepareError<Nothing, UserEntity>;
-typedef LoginCubitSubmitting = FormCubitSubmitting<Nothing, UserEntity>;
-typedef LoginCubitSubmitSuccess = FormCubitSubmitSuccess<Nothing, UserEntity>;
-typedef LoginCubitSubmitError = FormCubitSubmitError<Nothing, UserEntity>;
+typedef LoginCubitState = FormCubitState<Nothing, Nothing>;
+typedef LoginCubitPreparing = FormCubitPreparing<Nothing, Nothing>;
+typedef LoginCubitReady = FormCubitReady<Nothing, Nothing>;
+typedef LoginCubitPrepareError = FormCubitPrepareError<Nothing, Nothing>;
+typedef LoginCubitSubmitting = FormCubitSubmitting<Nothing, Nothing>;
+typedef LoginCubitSubmitSuccess = FormCubitSubmitSuccess<Nothing, Nothing>;
+typedef LoginCubitSubmitError = FormCubitSubmitError<Nothing, Nothing>;

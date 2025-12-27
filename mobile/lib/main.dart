@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:fdl_ui/fdl_ui.dart';
 import 'package:my_social/core/env/environment.dart';
 import 'package:my_social/core/localization/i18n/strings.g.dart';
@@ -6,7 +8,10 @@ import 'package:my_social/core/service_locator/service_locator.dart';
 import 'package:flutter/material.dart';
 
 void main() {
-  configureDependencies(AppEnvironment.mocked);
+  print(String.fromEnvironment('APP_ENV'));
+  configureDependencies(
+    String.fromEnvironment('APP_ENV', defaultValue: AppEnvironment.local),
+  );
 
   runApp(const MyApp());
 }

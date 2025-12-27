@@ -1,35 +1,38 @@
-import 'package:fdl_core/api_client/api_client.dart';
-import 'package:fdl_core/fdl_core.dart';
 import 'package:injectable/injectable.dart';
-import 'package:my_social/core/env/environment.dart';
 import 'package:my_social/core/session_handler/network/network_session.dart';
 import 'package:my_social/features/auth/data/datasources/auth_network_dts.dart';
+import 'package:my_social/features/auth/data/datasources/remote/api/mapper/request/login_request_mapper.dart';
+import 'package:my_social/features/auth/data/datasources/remote/api/mapper/request/register_request_mapper.dart';
 import 'package:my_social/features/auth/domain/entities/login_form.dart';
 import 'package:my_social/features/auth/domain/entities/register_form.dart';
-import 'package:my_social/features/auth/domain/entities/user.dart';
 import 'package:my_social_sdk/my_social_sdk.dart';
 
-@Injectable(as: AuthNetworkDts, env: AppEnvironment.apiEnvironments)
+@Injectable(as: AuthNetworkDts)
 class AuthApiNetworkDts implements AuthNetworkDts {
   final MySocialSdk _mySocialSdk;
-  final SessionHandler _sessionHandler;
-  AuthApiNetworkDts(this._mySocialSdk);
+  final RegisterRequestMapper _registerRequestMapper;
+  final LoginRequestMapper _loginRequestMapper;
+  AuthApiNetworkDts(
+    this._mySocialSdk,
+    this._registerRequestMapper,
+    this._loginRequestMapper,
+  );
 
-  AuthService get _authService => _mySocialSdk.authService;
+  AuthService get _authService => _mySocialSdk.authservice;
 
   @override
-  Future<UserEntity> login(LoginFormEntity loginForm) async {
+  Future<(NetworkSession, String)> login(LoginFormEntity loginForm) async {
     final result = await _authService.login(
-      LoginRequest(email: loginForm.email, password: loginForm.password),
+      _loginRequestMapper.toData(loginForm),
     );
-    final user = result.data.user;
-    _sessionHandler.setSession(
+    return (
       NetworkSession(
-        userId: user.id,
-        email: user.email,
+        userId: result.data.user.id,
+        email: result.data.user.email,
         token: result.data.accessToken,
-        role: user.role.value,
+        role: result.data.user.role.name,
       ),
+      result.message,
     );
   }
 
@@ -39,18 +42,10 @@ class AuthApiNetworkDts implements AuthNetworkDts {
   }
 
   @override
-  Future<UserEntity> register(RegisterFormEntity registerForm) async {
-    final result = await _apiClient.post(
-      path: 'auth/register',
-      body: {'email': registerForm.email, 'password': registerForm.password},
+  Future<String> register(RegisterFormEntity registerForm) async {
+    final result = await _authService.register(
+      _registerRequestMapper.toData(registerForm),
     );
-    return UserEntity(
-      id: result.data['id'],
-      fullName: result.data['fullName'],
-      email: result.data['email'],
-      password: registerForm.password,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
+    return result.message;
   }
 }

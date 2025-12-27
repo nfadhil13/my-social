@@ -84,7 +84,7 @@ class FormCubitSubmitSuccess<InitialData, ResultData>
 class FormCubitSubmitError<InitialData, ResultData>
     extends FormCubitReady<InitialData, ResultData> {
   final BaseException exception;
-  final Map<String, String> errors;
+  final Map<String, List<String>> errors;
 
   FormCubitSubmitError(
     this.exception,
@@ -93,7 +93,7 @@ class FormCubitSubmitError<InitialData, ResultData>
   });
 
   @override
-  List<Object?> get props => [exception];
+  List<Object?> get props => [exception, errors, ...super.props];
 }
 
 /// [FormCubitSubmitting] is a sealed class that represents the state of a form cubit when it is submitting.

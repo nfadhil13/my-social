@@ -1,8 +1,10 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:fdl_core/ext/list_ext.dart';
 import 'package:fdl_core/session_handler/session.dart';
 import 'package:fdl_types/exception/exception.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 part 'types/api_response.dart';
 part 'types/mocked_result.dart';

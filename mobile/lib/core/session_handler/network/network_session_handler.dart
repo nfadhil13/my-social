@@ -1,10 +1,9 @@
 import 'package:my_social/core/db/secure_storage/secure_storage.dart';
 import 'package:fdl_core/fdl_core.dart';
 import 'package:injectable/injectable.dart';
-import 'package:my_social/core/env/environment.dart';
 import 'package:my_social/core/session_handler/network/network_session.dart';
 
-@LazySingleton(as: SessionHandler, env: AppEnvironment.apiEnvironments)
+@LazySingleton(as: SessionHandler)
 class SessionHandlerNetworkImpl implements SessionHandler {
   final SecureStorage _secureStorage;
   final NetworkSessionMapper _mapper;

@@ -59,6 +59,12 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// en: 'Sign In'
 	String get signIn => 'Sign In';
 
+	/// en: 'Username'
+	String get username => 'Username';
+
+	/// en: 'john_doe'
+	String get usernamePlaceholder => 'john_doe';
+
 	/// en: 'Don't have an account?'
 	String get dontHaveAccount => 'Don\'t have an account?';
 
@@ -103,6 +109,33 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 
 	/// en: 'My Social'
 	String get appTitle => 'My Social';
+
+	late final TranslationsApiErrorEn apiError = TranslationsApiErrorEn._(_root);
+}
+
+// Path: apiError
+class TranslationsApiErrorEn {
+	TranslationsApiErrorEn._(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	late final TranslationsApiErrorFormErrorEn formError = TranslationsApiErrorFormErrorEn._(_root);
+}
+
+// Path: apiError.formError
+class TranslationsApiErrorFormErrorEn {
+	TranslationsApiErrorFormErrorEn._(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'This field is required'
+	String get REQUIRED => 'This field is required';
+
+	/// en: 'Username already exists'
+	String get USERNAME_EXISTS => 'Username already exists';
 }
 
 /// The flat map containing all translations for locale <en>.
@@ -119,6 +152,8 @@ extension on Translations {
 			'emailPlaceholder' => 'john@example.com',
 			'password' => 'Password',
 			'signIn' => 'Sign In',
+			'username' => 'Username',
+			'usernamePlaceholder' => 'john_doe',
 			'dontHaveAccount' => 'Don\'t have an account?',
 			'createAccount' => 'Create Account',
 			'userNotFound' => 'User not found',
@@ -134,6 +169,8 @@ extension on Translations {
 			'registerSuccess' => 'Account created successfully',
 			'loginSuccess' => 'Login successful',
 			'appTitle' => 'My Social',
+			'apiError.formError.REQUIRED' => 'This field is required',
+			'apiError.formError.USERNAME_EXISTS' => 'Username already exists',
 			_ => null,
 		};
 	}

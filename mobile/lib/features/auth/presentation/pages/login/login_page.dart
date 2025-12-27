@@ -75,7 +75,7 @@ class _FormContent extends StatelessWidget {
                 context.go(AppRoutes.home);
               }
               if (state is LoginCubitSubmitError) {
-                form.setError(state.errors);
+                form.setError(state.errors, notify: true);
                 context.showErrorSnackbar(
                   context.localizeMessage(state.exception.message),
                 );
@@ -100,14 +100,14 @@ class _FormContent extends StatelessWidget {
                   hint: t.emailPlaceholder,
                   onSaved: (value) => form.value.email = value ?? '',
                   keyboardType: TextInputType.emailAddress,
-                  validator: (value) => form.errors('email'),
+                  validator: (value) => form.errors('email')?.firstOrNull,
                 ),
                 const SizedBox(height: 24),
                 FDLPasswordField(
                   label: t.password,
                   onSaved: (value) => form.value.password = value ?? '',
                   hint: "********",
-                  validator: (value) => form.errors('password'),
+                  validator: (value) => form.errors('password')?.firstOrNull,
                 ),
                 const SizedBox(height: 32),
                 FDLFilledButton(

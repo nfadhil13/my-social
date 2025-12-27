@@ -83,9 +83,10 @@ abstract class FormCubit<InitialData, FormData, Result>
         );
       case Failure():
         final exception = result.exception;
-        final errors = exception is FormException
+        final errors = exception is ApiFormException
             ? exception.errors
-            : <String, String>{};
+            : <String, List<String>>{};
+
         onErrorSubmit(result.exception);
         emit(
           FormCubitSubmitError(

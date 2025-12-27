@@ -17,16 +17,19 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterRequest): Promise<UserResponse> {
+    console.log('registerDto', registerDto);
     return this.userService.createUser(registerDto);
   }
 
   async login(loginDto: LoginRequest): Promise<LoginResponse> {
     const user = await this.userService.findByEmail(loginDto.email);
+    console.log('user', user);
     if (!user) throw new DomainException(AUTH_ERRORS.INVALID_CREDENTIALS);
     const isPasswordValid = await bcrypt.compare(
       loginDto.password,
       user.password_hash,
     );
+    console.log('isPasswordValid', isPasswordValid);
     if (!isPasswordValid) {
       throw new DomainException(AUTH_ERRORS.INVALID_CREDENTIALS);
     }

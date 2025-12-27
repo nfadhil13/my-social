@@ -5,7 +5,6 @@ import 'package:my_social/core/router/router.dart';
 import 'package:my_social/core/service_locator/service_locator.dart';
 import 'package:my_social/core/localization/i18n/strings.g.dart';
 import 'package:my_social/features/auth/domain/entities/register_form.dart';
-import 'package:my_social/features/auth/domain/entities/user.dart';
 import 'package:my_social/features/auth/presentation/cubits/register/register_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -75,10 +74,10 @@ class _FormContent extends StatelessWidget {
                 context.showSuccessSnackbar(
                   context.translations.registerSuccess,
                 );
-                context.go(AppRoutes.home);
+                context.go(AppRoutes.login);
               }
               if (state is RegisterFormSubmitError) {
-                form.setError(state.errors);
+                form.setError(state.errors, notify: true);
                 context.showErrorSnackbar(
                   context.localizeMessage(state.exception.message),
                 );
@@ -94,11 +93,27 @@ class _FormContent extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 const SizedBox(height: 32),
+                const SizedBox(height: 24),
+                FDLTextField(
+                  label: t.username,
+                  hint: t.usernamePlaceholder,
+                  onSaved: (value) => form.value.username = value ?? '',
+                  keyboardType: TextInputType.text,
+                  validator: (value) => form
+                      .errors('username')
+                      ?.firstOrNull
+                      ?.localizedFormError(context),
+                ),
+                const SizedBox(height: 24),
+
                 FDLTextField(
                   label: t.fullName,
                   hint: t.fullNamePlaceholder,
                   onSaved: (value) => form.value.fullName = value ?? '',
-                  validator: (value) => form.errors('fullName'),
+                  validator: (value) => form
+                      .errors('fullName')
+                      ?.firstOrNull
+                      ?.localizedFormError(context),
                 ),
                 const SizedBox(height: 24),
                 FDLTextField(
@@ -106,21 +121,30 @@ class _FormContent extends StatelessWidget {
                   hint: t.emailPlaceholder,
                   onSaved: (value) => form.value.email = value ?? '',
                   keyboardType: TextInputType.emailAddress,
-                  validator: (value) => form.errors('email'),
+                  validator: (value) => form
+                      .errors('email')
+                      ?.firstOrNull
+                      ?.localizedFormError(context),
                 ),
                 const SizedBox(height: 24),
                 FDLPasswordField(
                   label: t.password,
                   onSaved: (value) => form.value.password = value ?? '',
                   hint: "********",
-                  validator: (value) => form.errors('password'),
+                  validator: (value) => form
+                      .errors('password')
+                      ?.firstOrNull
+                      ?.localizedFormError(context),
                 ),
                 const SizedBox(height: 24),
                 FDLPasswordField(
                   label: t.confirmPassword,
                   onSaved: (value) => form.value.confirmPassword = value ?? '',
                   hint: "********",
-                  validator: (value) => form.errors('confirmPassword'),
+                  validator: (value) => form
+                      .errors('confirmPassword')
+                      ?.firstOrNull
+                      ?.localizedFormError(context),
                 ),
                 const SizedBox(height: 32),
                 FDLFilledButton(

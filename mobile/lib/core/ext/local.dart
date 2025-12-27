@@ -8,3 +8,20 @@ extension LocalExtension on BuildContext {
     return translations[key] ?? key;
   }
 }
+
+extension LocalizeMessageExtension on String {
+  String? mayLocalizeMessage(BuildContext context) {
+    final translations = Translations.of(context);
+    final translated = translations[this];
+    return translated;
+  }
+
+  String localizeMessage(BuildContext context) {
+    final translations = Translations.of(context);
+    return translations[this] ?? this;
+  }
+
+  String localizedFormError(BuildContext context) {
+    return "apiError.formError.$this".mayLocalizeMessage(context) ?? this;
+  }
+}

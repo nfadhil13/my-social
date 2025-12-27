@@ -1,11 +1,12 @@
 import 'package:fdl_types/fdl_types.dart';
 import 'package:injectable/injectable.dart';
 import 'package:my_social/features/auth/domain/entities/login_form.dart';
+import 'package:my_social_sdk/models/models.dart';
 
 @injectable
-class LoginRequestMapper implements ToJSONMapper<LoginFormEntity> {
+class LoginRequestMapper implements ToMapper<LoginFormEntity, LoginRequest> {
   @override
-  toJson(LoginFormEntity object) {
-    return {'email': object.email, 'password': object.password};
+  LoginRequest toData(LoginFormEntity json) {
+    return LoginRequest(email: json.email, password: json.password);
   }
 }

@@ -7,7 +7,7 @@ part of '../api_client.dart';
 /// [body] : Response body (typically JSON)
 /// Returns a map of field names to error messages
 typedef ValidationErrorExtractor =
-    Map<String, String> Function(int statusCode, dynamic body);
+    Map<String, List<String>>? Function(int statusCode, dynamic body);
 
 /// Api Error Handler
 ///
