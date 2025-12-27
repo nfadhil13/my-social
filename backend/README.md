@@ -1,98 +1,170 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# My Social - Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+NestJS backend API server for the My Social application.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🚀 Getting Started
 
-## Description
+### Prerequisites
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- Node.js (v18+)
+- Yarn or npm
+- PostgreSQL database
 
-## Project setup
+### Installation
 
+1. Install dependencies:
 ```bash
-$ yarn install
+yarn install
 ```
 
-## Compile and run the project
-
-```bash
-# development
-$ yarn run start
-
-# watch mode
-$ yarn run start:dev
-
-# production mode
-$ yarn run start:prod
+2. Set up environment variables:
+Create a `.env` file in the `backend` directory:
+```env
+DATABASE_URL="postgresql://user:password@localhost:5432/my_social"
+JWT_SECRET="your-secret-key"
+PORT=3000
 ```
 
-## Run tests
-
+3. Run database migrations:
 ```bash
-# unit tests
-$ yarn run test
-
-# e2e tests
-$ yarn run test:e2e
-
-# test coverage
-$ yarn run test:cov
+yarn migrate:postgres
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
+4. Start the development server:
 ```bash
-$ yarn install -g @nestjs/mau
-$ mau deploy
+yarn start:dev
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+The API will be available at `http://localhost:3000`
+Swagger documentation: `http://localhost:3000/api`
 
-## Resources
+## 📚 API Documentation
 
-Check out a few resources that may come in handy when working with NestJS:
+### Base URL
+```
+/api/v1
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### Authentication
+All protected endpoints require a JWT token in the Authorization header:
+```
+Authorization: Bearer <access_token>
+```
 
-## Support
+### Main Endpoints
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+- **Authentication**
+  - `POST /api/v1/auth/register` - Register a new user
+  - `POST /api/v1/auth/login` - Login user
 
-## Stay in touch
+- **Users**
+  - `GET /api/v1/users/me` - Get current user
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- **Profiles**
+  - `GET /api/v1/profiles/me` - Get current user's profile
+  - `PATCH /api/v1/profiles/me` - Update profile
+  - `POST /api/v1/profiles/me/avatar` - Upload avatar
 
-## License
+- **Posts**
+  - `GET /api/v1/posts` - Get paginated feed
+  - `GET /api/v1/posts/:id` - Get post details
+  - `POST /api/v1/posts` - Create a new post
+  - `DELETE /api/v1/posts/:id` - Delete a post
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+For detailed API documentation:
+- Swagger UI: `http://localhost:3000/api` (when server is running)
+- API Specification: `../documentation/api_spesification.md`
+
+## 🛠️ Development
+
+### Available Scripts
+
+```bash
+# Development
+yarn start:dev          # Start in watch mode
+yarn start:debug        # Start in debug mode
+yarn start              # Start in production mode
+
+# Production
+yarn build              # Build the project
+yarn start:prod         # Start production server
+
+# Code Quality
+yarn lint               # Run ESLint
+yarn format             # Format code with Prettier
+
+# Database
+yarn migrate:postgres   # Run migrations
+yarn migrate:postgres-test  # Run test migrations
+```
+
+## 🧪 Testing
+
+### Unit Tests
+```bash
+yarn test
+```
+
+### E2E Tests
+```bash
+yarn test:e2e
+```
+
+### Test Coverage
+```bash
+yarn test:cov
+```
+
+## 🗄️ Database
+
+The application uses PostgreSQL with Prisma ORM. The database schema includes:
+
+- **User**: User accounts with email, username, and role
+- **Profile**: User profiles with bio, avatar, and thumbnail
+- **Post**: Posts with rich text content and optional images
+- **File**: File metadata and storage information
+
+See `prisma/schema.prisma` for the complete schema.
+
+### Migrations
+
+Run migrations:
+```bash
+yarn migrate:postgres
+```
+
+For test environment:
+```bash
+yarn migrate:postgres-test
+```
+
+## 🔒 Security Features
+
+- JWT token authentication
+- Password hashing with bcrypt
+- Rate limiting on authentication endpoints
+- File upload validation
+- Ownership-based authorization
+- Input validation with Zod
+- CORS configuration
+
+## 📦 Tech Stack
+
+- **Framework**: NestJS
+- **Language**: TypeScript
+- **Database**: PostgreSQL
+- **ORM**: Prisma
+- **Validation**: Zod
+- **Authentication**: JWT
+- **Documentation**: Swagger/OpenAPI
+
+## 📝 Key Backend Rules
+
+1. **Authentication**: All requests (except login/register) require a valid JWT token
+2. **Ownership**: Users can only modify their own resources (enforced on backend)
+3. **Soft Delete**: Posts are soft-deleted, not permanently removed
+4. **File Lifecycle**: Files are automatically cleaned up when associated resources are deleted
+5. **Pagination**: Feed uses cursor-based pagination, not offset-based
+6. **Rich Text**: Post content is stored as Quill JSON, not plain text
+
+See `../documentation/product_rule.md` for complete rules and constraints.
