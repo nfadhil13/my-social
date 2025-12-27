@@ -1,4 +1,4 @@
-library models;
+library;
 
 export 'register_response.dart';
 export 'register_request.dart';

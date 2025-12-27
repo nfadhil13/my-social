@@ -41,7 +41,6 @@ export function getDartType(
   propName: string,
   ctx: GeneratorContext
 ): DartType {
-  console.log(schema);
   if (schema.$ref) {
     const refName = schema.$ref.split("/").pop() as string;
     if (ctx.schemas.has(refName)) {
@@ -69,6 +68,14 @@ export function getDartType(
         type: "class",
       };
     }
+  }
+
+  // Date
+  if (schema.type === "string" && schema.format === "date-time") {
+    return {
+      name: "DateTime",
+      type: "Date",
+    };
   }
 
   if (schema.type === "array") {
@@ -139,6 +146,10 @@ export function getFromJsonValue(
     return `${className}.fromJson(${jsonPath} as Map<String, dynamic>)`;
   }
 
+  if (schema.type === "string" && schema.format === "date-time") {
+    return `DateTime.parse(${jsonPath} as String)`;
+  }
+
   if (
     schema.type === undefined &&
     schema.allOf != undefined &&
@@ -185,6 +196,10 @@ export function getToJsonValue(
 ): string {
   if (schema.$ref || (schema.type === "object" && schema.properties)) {
     return `${fieldName}.toJson()`;
+  }
+
+  if (schema.type === "string" && schema.format === "date-time") {
+    return `${fieldName}.toIso8601String()`;
   }
 
   if (
@@ -274,7 +289,6 @@ export function getResponseType(
           return getPrimitiveDartType(dataSchema);
         }
         const dartType = getDartType(dataSchema, "", ctx);
-        console.log(dartType);
         return dartType.name;
       }
     }

@@ -8,11 +8,13 @@ class AuthService {
   AuthService(this._client);
 
   Future<ResponseModel<RegisterResponse>> register(
-    RegisterRequest? register,
-  ) async {
+    RegisterRequest? register, {
+    bool shouldPrint = false,
+  }) async {
     final response = await _client.post(
       path: '/auth/register',
       body: register?.toJson(),
+      shouldPrint: shouldPrint,
     );
 
     if (response.data == null) {
@@ -31,14 +33,18 @@ class AuthService {
     }
     return ResponseModel.fromJson(
       response.data,
-      RegisterResponse.fromJson(response.data),
+      RegisterResponse.fromJson(response.data["data"]),
     );
   }
 
-  Future<ResponseModel<LoginResponse>> login(LoginRequest? login) async {
+  Future<ResponseModel<LoginResponse>> login(
+    LoginRequest? login, {
+    bool shouldPrint = false,
+  }) async {
     final response = await _client.post(
       path: '/auth/login',
       body: login?.toJson(),
+      shouldPrint: shouldPrint,
     );
 
     if (response.data == null) {
@@ -57,7 +63,7 @@ class AuthService {
     }
     return ResponseModel.fromJson(
       response.data,
-      LoginResponse.fromJson(response.data),
+      LoginResponse.fromJson(response.data["data"]),
     );
   }
 }

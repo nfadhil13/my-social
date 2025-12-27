@@ -13,4 +13,28 @@ extension DynamicExt<T extends dynamic> on T {
   /// value.run((it) => print(it));
   /// ```
   void run<Y>(void Function(T value) fun) => fun(this);
+
+  Y? safeParse<Y>({Y Function(T value)? map}) {
+    try {
+      if (map != null) {
+        return map(this);
+      }
+      return this as Y;
+    } catch (e) {
+      return null;
+    }
+  }
+}
+
+extension DynamicMapExt on dynamic {
+  Y? safeParse<Y>({Y Function(dynamic value)? map}) {
+    try {
+      if (map != null) {
+        return map(this);
+      }
+      return this as Y;
+    } catch (e) {
+      return null;
+    }
+  }
 }

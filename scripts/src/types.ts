@@ -41,6 +41,8 @@ export interface OpenAPISchemaRef {
   items?: OpenAPISchemaRef;
   enum?: string[];
   required?: string[];
+  format?: string;
+  nullable?: boolean;
   allOf?: OpenAPISchemaRef[];
   oneOf?: OpenAPISchemaRef[];
   anyOf?: OpenAPISchemaRef[];
@@ -61,5 +63,5 @@ export interface OpenAPIParameter {
 
 export interface DartType {
   name: string;
-  type: "primitive" | "class" | "array" | "enum";
+  type: "primitive" | "class" | "array" | "enum" | "Date";
 }

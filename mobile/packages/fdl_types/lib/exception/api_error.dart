@@ -15,7 +15,7 @@ class ApiException extends BaseException {
 }
 
 class ApiFormException extends ApiException {
-  final Map<String, String> errors;
+  final Map<String, List<String>> errors;
   const ApiFormException({
     required super.url,
     required this.errors,

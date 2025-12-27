@@ -17,8 +17,8 @@ export function generateDartSdk(spec: OpenAPISpec, outputDir: string): void {
   ensureOutputDir(ctx);
   generateResponseModel({ ctx });
   generateModels(ctx);
-  generateServices(ctx);
-  generateMainExport(ctx);
+  const serviceClasses = generateServices(ctx);
+  generateMainExport(serviceClasses, ctx);
 }
 
 function ensureOutputDir(ctx: GeneratorContext): void {

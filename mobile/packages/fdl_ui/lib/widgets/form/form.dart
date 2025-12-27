@@ -27,7 +27,7 @@ class _FDLFormState<Result, T extends Object?>
     extends State<FDLForm<Result, T>> {
   final _formKey = GlobalKey<FormState>();
 
-  Map<String, String> _errors = {};
+  Map<String, List<String>> _errors = {};
   late Result _value;
 
   @override
@@ -64,13 +64,16 @@ class _FDLFormState<Result, T extends Object?>
     return currentState.validate();
   }
 
-  void _setError(Map<String, String> errors) {
+  void _setError(Map<String, List<String>> errors, {bool? notify}) {
     setState(() {
       _errors = errors;
     });
+    if (notify == true) {
+      _validate();
+    }
   }
 
-  String? _lazyErrors(String key) => _errors[key];
+  List<String>? _lazyErrors(String key) => _errors[key];
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +109,7 @@ class _FDLFormState<Result, T extends Object?>
 class FDLFormSubmit<Result, SubmitResult extends Object?> {
   final Result value;
   final bool Function() validate;
-  final void Function(Map<String, String> errors) setError;
+  final void Function(Map<String, List<String>> errors) setError;
   final SubmitResult? submitResult;
 
   const FDLFormSubmit({
@@ -123,9 +126,10 @@ class FDLFormScope<Result, T extends Object?> extends InheritedWidget {
   final void Function([T? result]) submit;
   final bool Function() validate;
   final VoidCallback save;
-  final void Function(Map<String, String> errors) setError;
-  final String? Function(String key) errors;
-  final Map<String, String> Function() allErrors;
+  final void Function(Map<String, List<String>> errors, {bool? notify})
+  setError;
+  final List<String>? Function(String key) errors;
+  final Map<String, List<String>> Function() allErrors;
   final void Function(Result value) setValue;
 
   const FDLFormScope({

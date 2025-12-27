@@ -15,7 +15,7 @@ import {
   toSnakeCase,
 } from "./utils";
 
-export function generateServices(ctx: GeneratorContext): void {
+export function generateServices(ctx: GeneratorContext): string[] {
   const paths = ctx.spec.paths || {};
   const services: Map<string, OpenAPIOperation[]> = new Map();
 
@@ -36,6 +36,8 @@ export function generateServices(ctx: GeneratorContext): void {
     }
   }
 
+  const seriveClasses: string[] = [];
+
   for (const [tag, operations] of services.entries()) {
     const serviceCode = generateService(tag, operations, ctx);
     const filePath = path.join(
@@ -45,7 +47,20 @@ export function generateServices(ctx: GeneratorContext): void {
       `${toSnakeCase(tag)}_service.dart`
     );
     fs.writeFileSync(filePath, serviceCode);
+    seriveClasses.push(toPascalCase(`${tag}`));
   }
+
+  fs.writeFileSync(
+    path.join(ctx.outputDir, "lib", "services", "services.dart"),
+    `library;
+
+${seriveClasses
+  .map((cls) => `export './${toSnakeCase(cls)}_service.dart';`)
+  .join("\n")}
+`
+  );
+
+  return seriveClasses;
 }
 
 function generateService(
@@ -134,13 +149,14 @@ function generateMethod(
     "double",
   ].includes(responseType);
   const responseExtraction = isPrimitiveResponse
-    ? ` response.data as ${responseType}`
-    : ` ${responseType}.fromJson(response.data)`;
+    ? ` response.data["data] as ${responseType}`
+    : ` ${responseType}.fromJson(response.data["data"])`;
 
   return `
-  Future<ResponseModel<${responseType}>> ${methodName}(${params}) async {
+  Future<ResponseModel<${responseType}>> ${methodName}(${params} , {bool shouldPrint = false}) async {
     final response = await _client.${httpMethod}(
       path: '${pathWithParams}',${bodyParam}${queryMap}
+      shouldPrint: shouldPrint,
     );
     
     if (response.data == null) {

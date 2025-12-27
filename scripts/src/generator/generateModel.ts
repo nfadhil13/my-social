@@ -52,7 +52,7 @@ export function generateModels(ctx: GeneratorContext): void {
 
   fs.writeFileSync(
     path.join(ctx.outputDir, "lib", "models", "models.dart"),
-    `library models;\n\n${modelsExport}\n`
+    `library ;\n\n${modelsExport}\n`
   );
 }
 
@@ -77,12 +77,14 @@ function generateModel(
 
   for (const [propName, propSchema] of Object.entries(properties)) {
     const dartType = getDartType(propSchema, propName, ctx);
-    const isRequired = required.includes(propName);
+    const isRequired = !(propSchema.nullable === true);
     const fieldName = toCamelCase(propName);
     const fieldDartType =
       dartType.type === "enum"
         ? `${className}${toPascalCase(propName)}Enum`
         : dartType.name;
+    console.log(propName);
+    console.log(fieldDartType);
 
     if (dartType.type === "class") {
       imports += createImportString({ dartType: dartType.name });
@@ -260,7 +262,7 @@ function createFieldString({
   dartType: string;
   fieldName: string;
 }): string {
-  return `  final ${isRequired ? dartType : "$dartType?"} ${fieldName};\n`;
+  return `  final ${isRequired ? dartType : `${dartType}?`} ${fieldName};\n`;
 }
 
 function createConstructorParamsString({
