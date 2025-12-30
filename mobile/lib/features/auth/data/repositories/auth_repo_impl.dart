@@ -4,7 +4,6 @@ import 'package:my_social/features/auth/data/datasources/auth_local_dts.dart';
 import 'package:my_social/features/auth/data/datasources/auth_network_dts.dart';
 import 'package:my_social/features/auth/domain/entities/login_form.dart';
 import 'package:my_social/features/auth/domain/entities/register_form.dart';
-import 'package:my_social/features/auth/domain/entities/user.dart';
 import 'package:my_social/features/auth/domain/repositories/auth_repo.dart';
 import 'package:injectable/injectable.dart';
 

@@ -5,7 +5,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
 import 'package:my_social_sdk/my_social_sdk.dart';
-import 'package:fdl_core/fdl_core.dart';
 
 part 'core.dart';
 

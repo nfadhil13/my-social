@@ -41,6 +41,8 @@ dependencies:
   dio: ^5.9.0
 
 dev_dependencies:
+  openapi_sdk_generator:
+    path: packages/openapi_sdk_generator
   injectable_generator: ^2.7.0
   build_runner: ^2.7.0
   slang_build_runner: ^4.11.0
@@ -62,3 +64,8 @@ targets:
           output_directory: lib/core/localization/generated
           translation_class_visibility: public
           use_flutter_gen: false
+
+openapi_sdk_generator:
+  url: http://localhost:3000/api-json
+  output_directory: lib/generated
+  package_name: my_sdk

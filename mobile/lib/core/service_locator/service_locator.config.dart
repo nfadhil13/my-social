@@ -9,9 +9,7 @@
 // coverage:ignore-file
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:fdl_core/api_client/api_client.dart' as _i887;
 import 'package:fdl_core/fdl_core.dart' as _i970;
-import 'package:fdl_core/session_handler/session.dart' as _i217;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart' as _i558;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
@@ -104,14 +102,14 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i946.NetworkSessionMapper>(),
       ),
     );
-    gh.factory<_i887.ApiClient>(
+    gh.factory<_i970.ApiClient>(
       () => coreModule.getApiClient(
         gh<_i492.AppEnvironment>(),
-        gh<_i217.SessionHandler>(),
+        gh<_i970.SessionHandler>(),
       ),
     );
     gh.factory<_i885.MySocialSdk>(
-      () => coreModule.getMySocialSdk(gh<_i887.ApiClient>()),
+      () => coreModule.getMySocialSdk(gh<_i970.ApiClient>()),
     );
     gh.factory<_i114.AuthNetworkDts>(
       () => _i394.AuthApiNetworkDts(

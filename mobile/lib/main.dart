@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:fdl_ui/fdl_ui.dart';
 import 'package:my_social/core/env/environment.dart';
 import 'package:my_social/core/localization/i18n/strings.g.dart';
