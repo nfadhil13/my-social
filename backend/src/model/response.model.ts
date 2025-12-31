@@ -9,7 +9,6 @@ import {
 export class ResponseModel<T = unknown> {
   @ApiProperty({ description: 'Response message' })
   message: string;
-  @ApiProperty({ description: 'Response data' })
   data: T;
   @ApiProperty({ description: 'Response success' })
   success: boolean;
@@ -33,6 +32,7 @@ export const ApiOkResponseCustom = <T extends Type<unknown>>(data: T) =>
         allOf: [
           { $ref: getSchemaPath(ResponseModel) },
           {
+            type: 'object',
             properties: {
               data: {
                 type: data instanceof Array ? 'array' : 'object',

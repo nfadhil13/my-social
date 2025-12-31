@@ -1,10 +1,14 @@
 import 'package:code_builder/code_builder.dart';
 import 'package:dart_style/dart_style.dart';
+import '../../naming_conventions.dart';
+import '../naming_utils.dart';
 import '../../models/models.dart' hide Parameter;
 
 /// Model builder that generates Dart model classes from OpenAPI specification
 class ModelBuilder {
   final OpenApiSpec spec;
+  final NamingConvention schemaNamingConvention;
+  final NamingConvention propertyNamingConvention;
   final Map<String, String> schemaNameMap = {};
 
   DartFormatter get _formatter {
@@ -12,16 +16,21 @@ class ModelBuilder {
     return DartFormatter(languageVersion: DartFormatter.latestLanguageVersion);
   }
 
-  ModelBuilder(this.spec);
+  ModelBuilder(
+    this.spec,
+    this.schemaNamingConvention,
+    this.propertyNamingConvention,
+  );
 
   /// Generate all model classes from the OpenAPI specification
-  Map<String, String> generateModels() {
-    final models = <String, String>{};
+  Map<String, ClassMetaData> generateModels() {
+    final models = <String, ClassMetaData>{};
 
     if (spec.components?.schemas == null) {
       return models;
     }
-
+    // class name -> file name
+    Map<String, String> classFileNameMap = {};
     // First pass: collect all schema names
     for (final entry in spec.components!.schemas!.entries) {
       final schemaName = entry.key;
@@ -32,8 +41,15 @@ class ModelBuilder {
       }
 
       if (schema.type == 'object' || schema.properties != null) {
-        final dartClassName = _toPascalCase(schemaName);
+        final dartClassName = NamingUtils.toPascalCase(
+          schemaName,
+          from: schemaNamingConvention,
+        );
         schemaNameMap[schemaName] = dartClassName;
+        classFileNameMap[dartClassName] = NamingUtils.toSnakeCase(
+          schemaName,
+          from: schemaNamingConvention,
+        );
       }
     }
 
@@ -47,17 +63,28 @@ class ModelBuilder {
 
       if (schema.type == 'object' || schema.properties != null) {
         final dartClassName = schemaNameMap[schemaName]!;
-        final modelLibrary = _generateModelClass(dartClassName, schema);
-        final fileName = _toSnakeCase(schemaName);
+        final modelLibrary = _generateModelClass(
+          dartClassName,
+          schema,
+          classFileNameMap,
+        );
+        final fileName = classFileNameMap[dartClassName]!;
         final code = _formatter.format('${modelLibrary.accept(DartEmitter())}');
-        models['$fileName.dart'] = code;
+        models[dartClassName] = ClassMetaData(
+          code: code,
+          fileName: '$fileName.dart',
+        );
       }
     }
 
     return models;
   }
 
-  Library _generateModelClass(String className, Schema schema) {
+  Library _generateModelClass(
+    String className,
+    Schema schema,
+    Map<String, String> classFileNameMap,
+  ) {
     final library = LibraryBuilder();
 
     final classBuilder = ClassBuilder()..name = className;
@@ -76,7 +103,10 @@ class ModelBuilder {
       final propSchema = entry.value;
       final isRequired = requiredFields.contains(propName);
       final isNullable = propSchema.nullable ?? false;
-      final fieldName = _toCamelCase(propName);
+      final fieldName = NamingUtils.toCamelCase(
+        propName,
+        from: propertyNamingConvention,
+      );
       final dartType = _resolveDartTypeReference(propSchema);
       // Add field
       classBuilder.fields.add(
@@ -106,13 +136,25 @@ class ModelBuilder {
           .build(),
     );
 
-    // // Add fromJson factory
-    // classBuilder.constructors.add(_buildFromJsonFactory(className, schema));
+    // Add fromJson factory
+    classBuilder.constructors.add(_buildFromJsonFactory(className, schema));
 
     // // Add toJson method
     // classBuilder.methods.add(_buildToJsonMethod(schema));
 
     library.body.add(classBuilder.build());
+
+    for (final field in classBuilder.fields.build()) {
+      final fieldType = field.type?.symbol;
+      if (fieldType == null || !classFileNameMap.containsKey(fieldType)) {
+        continue;
+      }
+      final fileName = classFileNameMap[fieldType];
+      if (fileName == null) continue;
+      print("${fieldType} -> ${classFileNameMap[fieldType]}");
+      library.directives.add(Directive.import('$fileName.dart'));
+    }
+
     return library.build();
   }
 
@@ -138,7 +180,10 @@ class ModelBuilder {
     for (final entry in schema.properties!.entries) {
       final propName = entry.key;
       final propSchema = entry.value;
-      final fieldName = _toCamelCase(propName);
+      final fieldName = NamingUtils.toCamelCase(
+        propName,
+        from: propertyNamingConvention,
+      );
       final isRequired = requiredFields.contains(propName);
       final isNullable = propSchema.nullable ?? false;
 
@@ -180,7 +225,10 @@ class ModelBuilder {
     for (final entry in schema.properties!.entries) {
       final propName = entry.key;
       final propSchema = entry.value;
-      final fieldName = _toCamelCase(propName);
+      final fieldName = NamingUtils.toCamelCase(
+        propName,
+        from: propertyNamingConvention,
+      );
 
       final toJsonExpr = _buildToJsonExpression(propSchema, refer(fieldName));
       final isNullable = propSchema.nullable ?? false;
@@ -201,7 +249,9 @@ class ModelBuilder {
   Expression _buildFromJsonExpression(Schema schema, Expression jsonValue) {
     if (schema.ref != null) {
       final refName = _resolveRefName(schema.ref!);
-      final className = schemaNameMap[refName] ?? _toPascalCase(refName);
+      final className =
+          schemaNameMap[refName] ??
+          NamingUtils.toPascalCase(refName, from: schemaNamingConvention);
       return refer(className).call(
         [],
         {'json': jsonValue.asA(refer('Map<String, dynamic>'))},
@@ -286,7 +336,9 @@ class ModelBuilder {
   Reference _resolveDartTypeReference(Schema schema) {
     if (schema.ref != null) {
       final refName = _resolveRefName(schema.ref!);
-      final className = schemaNameMap[refName] ?? _toPascalCase(refName);
+      final className =
+          schemaNameMap[refName] ??
+          NamingUtils.toPascalCase(refName, from: schemaNamingConvention);
       final ref = refer(className);
       return schema.nullable ?? false
           ? TypeReference(
@@ -359,30 +411,11 @@ class ModelBuilder {
     final parts = ref.split('/');
     return parts.last;
   }
+}
 
-  String _toPascalCase(String str) {
-    if (str.isEmpty) return str;
-    final parts = str.split(RegExp(r'[-_\s]+'));
-    return parts.map((part) {
-      if (part.isEmpty) return '';
-      return part[0].toUpperCase() + part.substring(1).toLowerCase();
-    }).join();
-  }
+class ClassMetaData {
+  final String code;
+  final String fileName;
 
-  String _toCamelCase(String str) {
-    if (str.isEmpty) return str;
-    final pascal = _toPascalCase(str);
-    return pascal[0].toLowerCase() + pascal.substring(1);
-  }
-
-  String _toSnakeCase(String str) {
-    return str
-        .replaceAllMapped(
-          RegExp(r'([A-Z])'),
-          (match) => '_${match.group(1)!.toLowerCase()}',
-        )
-        .replaceAll(RegExp(r'[-_\s]+'), '_')
-        .replaceFirst(RegExp(r'^_'), '')
-        .toLowerCase();
-  }
+  ClassMetaData({required this.code, required this.fileName});
 }
