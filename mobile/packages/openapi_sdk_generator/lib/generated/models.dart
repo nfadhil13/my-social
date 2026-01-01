@@ -9,3 +9,5 @@ export 'models/register_request.dart';
 export 'models/user_response.dart';
 export 'models/login_response.dart';
 export 'models/login_request.dart';
+export 'models/auth_register_api_response.dart';
+export 'models/auth_login_api_response.dart';

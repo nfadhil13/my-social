@@ -77,6 +77,39 @@ class ModelBuilder {
       }
     }
 
+    for (final path in spec.paths.paths.entries) {
+      final response = path.value.post?.responses;
+      if (response == null) continue;
+      for (final entry in response.entries) {
+        final response = entry.value;
+        final content = response.content;
+        print("${path.key} ${entry.key} ${content?.keys}");
+        if (content == null) continue;
+        if (!content.containsKey('application/json')) continue;
+        final allOf = content['application/json']!.schema?.allOf;
+        if (allOf == null || allOf.isEmpty) continue;
+        final snakeCaseClassName =
+            '${path.key.split("/").skip(1).map((value) => value.toLowerCase()).join("_")}_api_response';
+        final dartClassName = NamingUtils.toPascalCase(
+          snakeCaseClassName,
+          from: NamingConvention.snakeCase,
+        );
+        final modelLibrary = _generateModelClass(
+          dartClassName,
+          content['application/json']!.schema!,
+          classFileNameMap,
+        );
+        final fileName = snakeCaseClassName;
+        final code = _formatter.format(
+          '${modelLibrary.accept(DartEmitter.scoped())}',
+        );
+        models[dartClassName] = ClassMetaData(
+          code: code,
+          fileName: '$fileName.dart',
+        );
+      }
+    }
+
     return models;
   }
 
@@ -88,43 +121,70 @@ class ModelBuilder {
     final library = LibraryBuilder();
 
     final classBuilder = ClassBuilder()..name = className;
-    if (schema.properties == null || schema.properties!.isEmpty) {
+    final constructorParams = <ParameterBuilder>[];
+
+    final allOf = schema.allOf;
+    if (allOf != null && allOf.isNotEmpty) {
+      for (final schema in allOf) {
+        final fieldName = NamingUtils.toCamelCase(
+          _resolveAndFormatAllOfFieldName(schema),
+          from: schemaNamingConvention,
+        );
+        final dartType = _resolveDartTypeReference(schema);
+        classBuilder.fields.add(
+          (FieldBuilder()
+                ..name = fieldName
+                ..type = dartType
+                ..modifier = FieldModifier.final$)
+              .build(),
+        );
+        constructorParams.add(
+          ParameterBuilder()
+            ..name = fieldName
+            ..named = true
+            ..required = true
+            ..toThis = true,
+        );
+      }
+    } else {
+      final requiredFields = schema.required ?? [];
+
+      // Generate fields
+      for (final entry in schema.properties!.entries) {
+        final propName = entry.key;
+        final propSchema = entry.value;
+        final isRequired = requiredFields.contains(propName);
+        final isNullable = propSchema.nullable ?? false;
+        final fieldName = NamingUtils.toCamelCase(
+          propName,
+          from: propertyNamingConvention,
+        );
+        final dartType = _resolveDartTypeReference(propSchema);
+        // Add field
+        classBuilder.fields.add(
+          (FieldBuilder()
+                ..name = fieldName
+                ..type = dartType
+                ..modifier = FieldModifier.final$)
+              .build(),
+        );
+
+        // Add constructor parameter
+        constructorParams.add(
+          ParameterBuilder()
+            ..name = fieldName
+            ..named = true
+            ..required = isRequired && !isNullable
+            ..toThis = true,
+        );
+      }
+    }
+
+    if ((schema.properties == null || schema.properties!.isEmpty) &&
+        (schema.allOf == null || schema.allOf!.isEmpty)) {
       // Empty class
       library.body.add(classBuilder.build());
       return library.build();
-    }
-
-    final requiredFields = schema.required ?? [];
-
-    // Generate fields
-    final constructorParams = <ParameterBuilder>[];
-    for (final entry in schema.properties!.entries) {
-      final propName = entry.key;
-      final propSchema = entry.value;
-      final isRequired = requiredFields.contains(propName);
-      final isNullable = propSchema.nullable ?? false;
-      final fieldName = NamingUtils.toCamelCase(
-        propName,
-        from: propertyNamingConvention,
-      );
-      final dartType = _resolveDartTypeReference(propSchema);
-      // Add field
-      classBuilder.fields.add(
-        (FieldBuilder()
-              ..name = fieldName
-              ..type = dartType
-              ..modifier = FieldModifier.final$)
-            .build(),
-      );
-
-      // Add constructor parameter
-      constructorParams.add(
-        ParameterBuilder()
-          ..name = fieldName
-          ..named = true
-          ..required = isRequired && !isNullable
-          ..toThis = true,
-      );
     }
 
     // Add constructor
@@ -143,7 +203,6 @@ class ModelBuilder {
     classBuilder.methods.add(_buildToJsonMethod(schema));
 
     library.body.add(classBuilder.build());
-
     for (final field in classBuilder.fields.build()) {
       final fieldType = field.type?.symbol;
       if (fieldType == null || !classFileNameMap.containsKey(fieldType)) {
@@ -169,7 +228,8 @@ class ModelBuilder {
             .build(),
       );
 
-    if (schema.properties == null || schema.properties!.isEmpty) {
+    if ((schema.properties == null || schema.properties!.isEmpty) &&
+        (schema.allOf == null || schema.allOf!.isEmpty)) {
       factory.body = Code('return $className();');
       return factory.build();
     }
@@ -177,7 +237,47 @@ class ModelBuilder {
     final requiredFields = schema.required ?? [];
     final returnStatements = <Code>[];
 
-    for (final entry in schema.properties!.entries) {
+    final allOf = schema.allOf;
+
+    if (allOf != null && allOf.isNotEmpty) {
+      for (final schema in allOf) {
+        final fieldName = NamingUtils.toCamelCase(
+          _resolveAndFormatAllOfFieldName(schema),
+          from: schemaNamingConvention,
+        );
+        if (schema.ref != null) {
+          final jsonAccess = refer('json');
+          final fromJsonExpr = _buildFromJsonExpression(schema, jsonAccess);
+
+          returnStatements.add(
+            Code('$fieldName: ${fromJsonExpr.accept(DartEmitter.scoped())},'),
+          );
+        }
+
+        if (schema.properties != null && schema.properties!.isNotEmpty) {
+          for (final entry in schema.properties!.entries) {
+            final propName = entry.key;
+            final propSchema = entry.value;
+            final fieldName = NamingUtils.toCamelCase(
+              propName,
+              from: propertyNamingConvention,
+            );
+            final jsonAccess = refer('json').index(literalString(propName));
+            final fromJsonExpr = _buildFromJsonExpression(
+              propSchema,
+              jsonAccess,
+            );
+
+            returnStatements.add(
+              Code('$fieldName: ${fromJsonExpr.accept(DartEmitter.scoped())},'),
+            );
+          }
+        }
+      }
+    }
+
+    for (final entry
+        in schema.properties?.entries ?? <MapEntry<String, Schema>>[]) {
       final propName = entry.key;
       final propSchema = entry.value;
       final fieldName = NamingUtils.toCamelCase(
@@ -353,6 +453,14 @@ class ModelBuilder {
           : ref;
     }
 
+    if (schema.type == 'object') {
+      final properties = schema.properties;
+      if (properties != null && properties.isNotEmpty) {
+        return TypeReference((b) => b..symbol = _resolveAllOfType(schema));
+      }
+      return refer('dynamic');
+    }
+
     if (schema.enumValues != null && schema.enumValues!.isNotEmpty) {
       final ref = refer('String');
       return schema.nullable ?? false
@@ -408,6 +516,42 @@ class ModelBuilder {
       default:
         return refer('dynamic');
     }
+  }
+
+  String _resolveAndFormatAllOfFieldName(Schema schema) {
+    final properties = schema.properties;
+    if (properties != null && properties.isNotEmpty) {
+      return NamingUtils.toCamelCase(
+        properties.keys.first,
+        from: propertyNamingConvention,
+      );
+    }
+    if (schema.ref != null) {
+      final refName = _resolveRefName(schema.ref!);
+      return NamingUtils.toCamelCase(refName, from: schemaNamingConvention);
+    }
+    throw Exception('No properties found in schema');
+  }
+
+  String _resolveAllOfType(Schema schema) {
+    final properties = schema.properties?.entries.firstOrNull;
+    if (properties == null) throw Exception('No properties found in schema');
+    final propertiesVal = properties.value;
+    if (propertiesVal.ref != null) {
+      final ref = propertiesVal.ref!;
+      final refName = _resolveRefName(ref);
+      final className =
+          schemaNameMap[refName] ??
+          NamingUtils.toPascalCase(refName, from: schemaNamingConvention);
+      return className;
+    }
+
+    if (schema.enumValues != null && schema.enumValues!.isNotEmpty) {
+      throw UnimplementedError();
+    }
+
+    final baseRef = _getPrimitiveTypeReference(schema.type);
+    return baseRef.symbol!;
   }
 
   String _resolveRefName(String ref) {

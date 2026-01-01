@@ -24,27 +24,39 @@ export function successResponse<T>(data: T, message: string): ResponseModel<T> {
   };
 }
 
-export const ApiOkResponseCustom = <T extends Type<unknown>>(data: T) =>
-  applyDecorators(
+export const ApiOkResponseCustom = <T extends Type<unknown>>(data: T) => {
+  let dataContent = {};
+  if (data instanceof Object) {
+    dataContent = {
+      $ref: getSchemaPath(data),
+    };
+  } else if (Array.isArray(data)) {
+    dataContent = {
+      type: 'array',
+      items: {
+        $ref: getSchemaPath(data[0]),
+      },
+    };
+  } else {
+    dataContent = {
+      type: typeof data,
+    };
+  }
+  return applyDecorators(
     ApiExtraModels(ResponseModel, data),
     ApiOkResponse({
       schema: {
         allOf: [
           { $ref: getSchemaPath(ResponseModel) },
+          // { $ref: getSchemaPath(data) },
           {
             type: 'object',
             properties: {
-              data: {
-                type: data instanceof Array ? 'array' : 'object',
-                $ref: data instanceof Array ? undefined : getSchemaPath(data),
-                items:
-                  data instanceof Array
-                    ? { $ref: getSchemaPath(data) }
-                    : undefined,
-              },
+              data: dataContent,
             },
           },
         ],
       },
     }),
   );
+};

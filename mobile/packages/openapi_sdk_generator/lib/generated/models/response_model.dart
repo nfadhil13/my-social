@@ -17,7 +17,7 @@ class ResponseModel {
 
   final bool success;
 
-  final Map<String, dynamic> errors;
+  final dynamic errors;
 
   Map<String, dynamic> toJson() {
     return {'message': message, 'success': success, 'errors': errors};
