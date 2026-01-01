@@ -140,7 +140,7 @@ class ModelBuilder {
     classBuilder.constructors.add(_buildFromJsonFactory(className, schema));
 
     // // Add toJson method
-    // classBuilder.methods.add(_buildToJsonMethod(schema));
+    classBuilder.methods.add(_buildToJsonMethod(schema));
 
     library.body.add(classBuilder.build());
 
@@ -151,11 +151,11 @@ class ModelBuilder {
       }
       final fileName = classFileNameMap[fieldType];
       if (fileName == null) continue;
-      print("${fieldType} -> ${classFileNameMap[fieldType]}");
       library.directives.add(Directive.import('$fileName.dart'));
     }
 
-    return library.build();
+    final lib = library.build();
+    return lib;
   }
 
   Constructor _buildFromJsonFactory(String className, Schema schema) {
@@ -191,14 +191,18 @@ class ModelBuilder {
       final fromJsonExpr = _buildFromJsonExpression(propSchema, jsonAccess);
 
       if (isRequired && !isNullable) {
-        returnStatements.add(Code('$fieldName: $fromJsonExpr,'));
+        returnStatements.add(
+          Code('$fieldName: ${fromJsonExpr.accept(DartEmitter.scoped())},'),
+        );
       } else {
         final nullCheck = isNullable
             ? jsonAccess
                   .notEqualTo(literalNull)
                   .conditional(fromJsonExpr, literalNull)
             : fromJsonExpr;
-        returnStatements.add(Code('$fieldName: $nullCheck,'));
+        returnStatements.add(
+          Code('$fieldName: ${nullCheck.accept(DartEmitter.scoped())},'),
+        );
       }
     }
 
@@ -242,7 +246,9 @@ class ModelBuilder {
       }
     }
 
-    method.body = Code('return ${literalMap(returnMap)};');
+    method.body = Code(
+      'return ${literalMap(returnMap).accept(DartEmitter.scoped())};',
+    );
     return method.build();
   }
 
@@ -252,11 +258,9 @@ class ModelBuilder {
       final className =
           schemaNameMap[refName] ??
           NamingUtils.toPascalCase(refName, from: schemaNamingConvention);
-      return refer(className).call(
-        [],
-        {'json': jsonValue.asA(refer('Map<String, dynamic>'))},
-        [refer('fromJson')],
-      );
+      return refer(
+        "$className.fromJson",
+      ).call([jsonValue.asA(refer('Map<String, dynamic>'))], {}, []);
     }
 
     switch (schema.type) {

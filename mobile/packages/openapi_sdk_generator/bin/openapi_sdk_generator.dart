@@ -7,139 +7,147 @@ import 'package:yaml/yaml.dart';
 import 'package:openapi_sdk_generator/openapi_sdk_generator.dart';
 
 void main(List<String> arguments) async {
-  final parser = ArgParser()
-    ..addOption(
-      OpenApiSdkGeneratorConfig.urlOption,
-      abbr: 'u',
-      help: 'OpenAPI specification URL',
-    )
-    ..addOption(
-      OpenApiSdkGeneratorConfig.outputOption,
-      abbr: 'o',
-      help: 'Output directory for generated SDK',
-      defaultsTo: 'lib/generated',
-    )
-    ..addOption(
-      OpenApiSdkGeneratorConfig.classNamingConventionOption,
-      abbr: 'c',
-      help: 'Schema naming convention',
-      defaultsTo: NamingConvention.pascalCase.name,
-    )
-    ..addOption(
-      OpenApiSdkGeneratorConfig.propertyNamingConventionOption,
-      abbr: 'f',
-      help: 'Property naming convention',
-      defaultsTo: NamingConvention.camelCase.name,
-    )
-    ..addOption(
-      OpenApiSdkGeneratorConfig.packageNameOption,
-      abbr: 'p',
-      help: 'Package name for generated SDK',
-    )
-    ..addFlag(
-      'help',
-      abbr: 'h',
-      negatable: false,
-      help: 'Show this help message',
-    );
-
-  final results = parser.parse(arguments);
-
-  if (results['help'] as bool) {
-    print('OpenAPI SDK Generator');
-    print('');
-    print('Usage:');
-    print('  dart run openapi_sdk_generator [options]');
-    print('');
-    print('Options:');
-    print(parser.usage);
-    exit(0);
-  }
-
-  late OpenApiSdkGeneratorConfig config;
-
   try {
-    config = OpenApiSdkGeneratorConfig.fromParser(results);
+    final parser = ArgParser()
+      ..addOption(
+        OpenApiSdkGeneratorConfig.urlOption,
+        abbr: 'u',
+        help: 'OpenAPI specification URL',
+      )
+      ..addOption(
+        OpenApiSdkGeneratorConfig.outputOption,
+        abbr: 'o',
+        help: 'Output directory for generated SDK',
+        defaultsTo: 'lib/generated',
+      )
+      ..addOption(
+        OpenApiSdkGeneratorConfig.classNamingConventionOption,
+        abbr: 'c',
+        help: 'Schema naming convention',
+        defaultsTo: NamingConvention.pascalCase.name,
+      )
+      ..addOption(
+        OpenApiSdkGeneratorConfig.propertyNamingConventionOption,
+        abbr: 'f',
+        help: 'Property naming convention',
+        defaultsTo: NamingConvention.camelCase.name,
+      )
+      ..addOption(
+        OpenApiSdkGeneratorConfig.packageNameOption,
+        abbr: 'p',
+        help: 'Package name for generated SDK',
+      )
+      ..addFlag(
+        'help',
+        abbr: 'h',
+        negatable: false,
+        help: 'Show this help message',
+      );
+
+    final results = parser.parse(arguments);
+
+    if (results['help'] as bool) {
+      print('OpenAPI SDK Generator');
+      print('');
+      print('Usage:');
+      print('  dart run openapi_sdk_generator [options]');
+      print('');
+      print('Options:');
+      print(parser.usage);
+      exit(0);
+    }
+
+    late OpenApiSdkGeneratorConfig config;
+
+    try {
+      config = OpenApiSdkGeneratorConfig.fromParser(results);
+    } catch (e, stackTrace) {
+      print('Error: $e');
+      print(stackTrace);
+      exit(1);
+    }
+
+    final url = config.url;
+    if (url == null || url.isEmpty) {
+      print(
+        'Error: URL is required. Provide --url or configure in pubspec.yaml',
+      );
+      exit(1);
+    }
+
+    final outputDir = config.outputDirectory;
+
+    print('🚀 OpenAPI SDK Generator');
+    print('');
+    print('📡 Fetching OpenAPI specification from: $url');
+
+    // Create source and fetch spec
+    final source = OpenApiNetworkSource(url);
+    final spec = await source.getSpecification();
+
+    print('✅ Fetched OpenAPI specification');
+    print('   Title: ${spec.info.title}');
+    print('   Version: ${spec.info.version}');
+    print('');
+
+    // Generate models
+    print('🔨 Generating SDK models...');
+    final modelBuilder = ModelBuilder(
+      spec,
+      config.classNamingConvention,
+      config.propertyNamingConvention,
+    );
+    final models = modelBuilder.generateModels();
+
+    print('✅ Generated ${models.length} model classes');
+    print('');
+
+    // Determine output directory
+    final currentDir = Directory.current;
+    final outputDirectory = Directory(
+      path.join(currentDir.path, outputDir, 'models'),
+    );
+    await outputDirectory.create(recursive: true);
+
+    // Write model files
+    print('📝 Writing model files...');
+    for (final entry in models.entries) {
+      final fileName = entry.value.fileName;
+      final content = entry.value;
+      final file = File(path.join(outputDirectory.path, fileName));
+      await file.writeAsString(content.code);
+      print('   ✓ $fileName');
+    }
+
+    // Generate models.dart export file
+    if (models.isNotEmpty) {
+      final exportBuffer = StringBuffer();
+      exportBuffer.writeln('// GENERATED CODE - DO NOT MODIFY BY HAND');
+      exportBuffer.writeln('// Generated from OpenAPI specification');
+      exportBuffer.writeln('// Title: ${spec.info.title}');
+      exportBuffer.writeln('// Version: ${spec.info.version}');
+      exportBuffer.writeln('');
+
+      for (final key in models.keys) {
+        final exportName = models[key]!.fileName.replaceAll('.dart', '');
+        exportBuffer.writeln("export 'models/$exportName.dart';");
+      }
+
+      final exportFile = File(
+        path.join(outputDirectory.parent.path, 'models.dart'),
+      );
+      await exportFile.writeAsString(exportBuffer.toString());
+      print('   ✓ models.dart');
+    }
+
+    print('');
+    print('✨ SDK generation complete!');
+    print('   Output: ${outputDirectory.path}');
   } catch (e, stackTrace) {
-    print('Error: $e');
+    print(e);
     print(stackTrace);
     exit(1);
   }
-
-  final url = config.url;
-  if (url == null || url.isEmpty) {
-    print('Error: URL is required. Provide --url or configure in pubspec.yaml');
-    exit(1);
-  }
-
-  final outputDir = config.outputDirectory;
-
-  print('🚀 OpenAPI SDK Generator');
-  print('');
-  print('📡 Fetching OpenAPI specification from: $url');
-
-  // Create source and fetch spec
-  final source = OpenApiNetworkSource(url);
-  final spec = await source.getSpecification();
-
-  print('✅ Fetched OpenAPI specification');
-  print('   Title: ${spec.info.title}');
-  print('   Version: ${spec.info.version}');
-  print('');
-
-  // Generate models
-  print('🔨 Generating SDK models...');
-  final modelBuilder = ModelBuilder(
-    spec,
-    config.classNamingConvention,
-    config.propertyNamingConvention,
-  );
-  final models = modelBuilder.generateModels();
-
-  print('✅ Generated ${models.length} model classes');
-  print('');
-
-  // Determine output directory
-  final currentDir = Directory.current;
-  final outputDirectory = Directory(
-    path.join(currentDir.path, outputDir, 'models'),
-  );
-  await outputDirectory.create(recursive: true);
-
-  // Write model files
-  print('📝 Writing model files...');
-  for (final entry in models.entries) {
-    final fileName = entry.value.fileName;
-    final content = entry.value;
-    final file = File(path.join(outputDirectory.path, fileName));
-    await file.writeAsString(content.code);
-    print('   ✓ $fileName');
-  }
-
-  // Generate models.dart export file
-  if (models.isNotEmpty) {
-    final exportBuffer = StringBuffer();
-    exportBuffer.writeln('// GENERATED CODE - DO NOT MODIFY BY HAND');
-    exportBuffer.writeln('// Generated from OpenAPI specification');
-    exportBuffer.writeln('// Title: ${spec.info.title}');
-    exportBuffer.writeln('// Version: ${spec.info.version}');
-    exportBuffer.writeln('');
-
-    for (final key in models.keys) {
-      final exportName = models[key]!.fileName.replaceAll('.dart', '');
-      exportBuffer.writeln("export 'models/$exportName.dart';");
-    }
-
-    final exportFile = File(
-      path.join(outputDirectory.parent.path, 'models.dart'),
-    );
-    await exportFile.writeAsString(exportBuffer.toString());
-    print('   ✓ models.dart');
-  }
-
-  print('');
-  print('✨ SDK generation complete!');
-  print('   Output: ${outputDirectory.path}');
 }
 
 class OpenApiSdkGeneratorConfig {
