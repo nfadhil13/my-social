@@ -97,26 +97,37 @@ void main(List<String> arguments) async {
       config.classNamingConvention,
       config.propertyNamingConvention,
     );
-    final models = modelBuilder.generateModels();
+    final generatedModelResult = modelBuilder.generateModels();
+    final models = generatedModelResult.models;
+    final serviceModels = generatedModelResult.serviceModels;
 
     print('✅ Generated ${models.length} model classes');
     print('');
 
     // Determine output directory
     final currentDir = Directory.current;
-    final outputDirectory = Directory(
+    final modelOutputDirectory = Directory(
       path.join(currentDir.path, outputDir, 'models'),
     );
-    await outputDirectory.create(recursive: true);
-
+    final serviceOutputDirectory = Directory(
+      path.join(currentDir.path, outputDir, 'service/result'),
+    );
+    await modelOutputDirectory.create(recursive: true);
+    await serviceOutputDirectory.create(recursive: true);
     // Write model files
     print('📝 Writing model files...');
     for (final entry in models.entries) {
       final fileName = entry.value.fileName;
       final content = entry.value;
-      final file = File(path.join(outputDirectory.path, fileName));
+      final file = File(path.join(modelOutputDirectory.path, fileName));
       await file.writeAsString(content.code);
-      print('   ✓ $fileName');
+    }
+
+    for (final entry in generatedModelResult.serviceModels.entries) {
+      final fileName = entry.value.fileName;
+      final content = entry.value;
+      final file = File(path.join(serviceOutputDirectory.path, fileName));
+      await file.writeAsString(content.code);
     }
 
     // Generate models.dart export file
@@ -130,11 +141,32 @@ void main(List<String> arguments) async {
 
       for (final key in models.keys) {
         final exportName = models[key]!.fileName.replaceAll('.dart', '');
-        exportBuffer.writeln("export 'models/$exportName.dart';");
+        exportBuffer.writeln("export '$exportName.dart';");
       }
 
       final exportFile = File(
-        path.join(outputDirectory.parent.path, 'models.dart'),
+        path.join(modelOutputDirectory.path, 'index.dart'),
+      );
+      await exportFile.writeAsString(exportBuffer.toString());
+      print('   ✓ models.dart');
+    }
+
+    // Generate service/result.dart export file
+    if (serviceModels.isNotEmpty) {
+      final exportBuffer = StringBuffer();
+      exportBuffer.writeln('// GENERATED CODE - DO NOT MODIFY BY HAND');
+      exportBuffer.writeln('// Generated from OpenAPI specification');
+      exportBuffer.writeln('// Title: ${spec.info.title}');
+      exportBuffer.writeln('// Version: ${spec.info.version}');
+      exportBuffer.writeln('');
+
+      for (final key in serviceModels.keys) {
+        final exportName = serviceModels[key]!.fileName.replaceAll('.dart', '');
+        exportBuffer.writeln("export '$exportName.dart';");
+      }
+
+      final exportFile = File(
+        path.join(serviceOutputDirectory.path, 'index.dart'),
       );
       await exportFile.writeAsString(exportBuffer.toString());
       print('   ✓ models.dart');
@@ -142,7 +174,7 @@ void main(List<String> arguments) async {
 
     print('');
     print('✨ SDK generation complete!');
-    print('   Output: ${outputDirectory.path}');
+    print('   Output: ${modelOutputDirectory.path}');
   } catch (e, stackTrace) {
     print(e);
     print(stackTrace);

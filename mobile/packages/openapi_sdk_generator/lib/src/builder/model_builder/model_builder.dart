@@ -23,12 +23,9 @@ class ModelBuilder {
   );
 
   /// Generate all model classes from the OpenAPI specification
-  Map<String, ClassMetaData> generateModels() {
+  GenerateModelResult generateModels() {
     final models = <String, ClassMetaData>{};
-
-    if (spec.components?.schemas == null) {
-      return models;
-    }
+    final serviceModels = <String, ClassMetaData>{};
     // class name -> file name
     Map<String, String> classFileNameMap = {};
     // First pass: collect all schema names
@@ -78,46 +75,57 @@ class ModelBuilder {
     }
 
     for (final path in spec.paths.paths.entries) {
-      final response = path.value.post?.responses;
-      if (response == null) continue;
-      for (final entry in response.entries) {
-        final response = entry.value;
-        final content = response.content;
-        print("${path.key} ${entry.key} ${content?.keys}");
-        if (content == null) continue;
-        if (!content.containsKey('application/json')) continue;
-        final allOf = content['application/json']!.schema?.allOf;
-        if (allOf == null || allOf.isEmpty) continue;
-        final snakeCaseClassName =
-            '${path.key.split("/").skip(1).map((value) => value.toLowerCase()).join("_")}_api_response';
-        final dartClassName = NamingUtils.toPascalCase(
-          snakeCaseClassName,
-          from: NamingConvention.snakeCase,
-        );
-        final modelLibrary = _generateModelClass(
-          dartClassName,
-          content['application/json']!.schema!,
-          classFileNameMap,
-        );
-        final fileName = snakeCaseClassName;
-        final code = _formatter.format(
-          '${modelLibrary.accept(DartEmitter.scoped())}',
-        );
-        models[dartClassName] = ClassMetaData(
-          code: code,
-          fileName: '$fileName.dart',
-        );
+      final reponses = {
+        'post': path.value.post?.responses,
+        'get': path.value.get?.responses,
+        'put': path.value.put?.responses,
+        'delete': path.value.delete?.responses,
+        'patch': path.value.patch?.responses,
+      };
+      for (final responseEntry in reponses.entries) {
+        final response = responseEntry.value;
+        final operation = responseEntry.key;
+        if (response == null) continue;
+        for (final entry in response.entries) {
+          final response = entry.value;
+          final content = response.content;
+          if (content == null) continue;
+          if (!content.containsKey('application/json')) continue;
+          final allOf = content['application/json']!.schema?.allOf;
+          if (allOf == null || allOf.isEmpty) continue;
+          final snakeCaseClassName =
+              '$operation${path.key.split("/").map((value) => value.toLowerCase()).join("_")}_api_response';
+          final dartClassName = NamingUtils.toPascalCase(
+            snakeCaseClassName,
+            from: NamingConvention.snakeCase,
+          );
+          final modelLibrary = _generateModelClass(
+            dartClassName,
+            content['application/json']!.schema!,
+            classFileNameMap,
+            isServiceResult: true,
+          );
+          final fileName = snakeCaseClassName;
+          final code = _formatter.format(
+            '${modelLibrary.accept(DartEmitter.scoped())}',
+          );
+          serviceModels[dartClassName] = ClassMetaData(
+            code: code,
+            fileName: '$fileName.dart',
+          );
+        }
       }
     }
 
-    return models;
+    return GenerateModelResult(models: models, serviceModels: serviceModels);
   }
 
   Library _generateModelClass(
     String className,
     Schema schema,
-    Map<String, String> classFileNameMap,
-  ) {
+    Map<String, String> classFileNameMap, {
+    bool isServiceResult = false,
+  }) {
     final library = LibraryBuilder();
 
     final classBuilder = ClassBuilder()..name = className;
@@ -203,14 +211,18 @@ class ModelBuilder {
     classBuilder.methods.add(_buildToJsonMethod(schema));
 
     library.body.add(classBuilder.build());
-    for (final field in classBuilder.fields.build()) {
-      final fieldType = field.type?.symbol;
-      if (fieldType == null || !classFileNameMap.containsKey(fieldType)) {
-        continue;
+    if (!isServiceResult) {
+      for (final field in classBuilder.fields.build()) {
+        final fieldType = field.type?.symbol;
+        if (fieldType == null || !classFileNameMap.containsKey(fieldType)) {
+          continue;
+        }
+        final fileName = classFileNameMap[fieldType];
+        if (fileName == null) continue;
+        library.directives.add(Directive.import('$fileName.dart'));
       }
-      final fileName = classFileNameMap[fieldType];
-      if (fileName == null) continue;
-      library.directives.add(Directive.import('$fileName.dart'));
+    } else {
+      library.directives.add(Directive.import('../../models/index.dart'));
     }
 
     final lib = library.build();
@@ -566,4 +578,11 @@ class ClassMetaData {
   final String fileName;
 
   ClassMetaData({required this.code, required this.fileName});
+}
+
+class GenerateModelResult {
+  final Map<String, ClassMetaData> models;
+  final Map<String, ClassMetaData> serviceModels;
+
+  GenerateModelResult({required this.models, required this.serviceModels});
 }

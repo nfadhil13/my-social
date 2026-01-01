@@ -1,11 +1,13 @@
-import 'response_model.dart';
-import 'register_response.dart';
+import '../../models/index.dart';
 
-class AuthRegisterApiResponse {
-  AuthRegisterApiResponse({required this.responsemodel, required this.data});
+class PostAuthRegisterApiResponse {
+  PostAuthRegisterApiResponse({
+    required this.responsemodel,
+    required this.data,
+  });
 
-  factory AuthRegisterApiResponse.fromJson(Map<String, dynamic> json) {
-    return AuthRegisterApiResponse(
+  factory PostAuthRegisterApiResponse.fromJson(Map<String, dynamic> json) {
+    return PostAuthRegisterApiResponse(
       responsemodel: ResponseModel.fromJson((json as Map<String, dynamic>)),
       data: RegisterResponse.fromJson((json['data'] as Map<String, dynamic>)),
     );
