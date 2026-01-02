@@ -3,5 +3,4 @@
 // Title: My Social
 // Version: 1.0
 
-export 'auth_register_post_api_response.dart';
-export 'auth_login_post_api_response.dart';
+export 'auth_service.dart';

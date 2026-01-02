@@ -2,8 +2,8 @@
 
 import 'dart:io';
 import 'package:args/args.dart';
+import 'package:dart_style/dart_style.dart';
 import 'package:path/path.dart' as path;
-import 'package:yaml/yaml.dart';
 import 'package:openapi_sdk_generator/openapi_sdk_generator.dart';
 
 void main(List<String> arguments) async {
@@ -35,6 +35,7 @@ void main(List<String> arguments) async {
       ..addOption(
         OpenApiSdkGeneratorConfig.packageNameOption,
         abbr: 'p',
+        defaultsTo: 'openapi_sdk',
         help: 'Package name for generated SDK',
       )
       ..addFlag(
@@ -85,6 +86,10 @@ void main(List<String> arguments) async {
     final source = OpenApiNetworkSource(url);
     final spec = await source.getSpecification();
 
+    final formatter = DartFormatter(
+      languageVersion: DartFormatter.latestLanguageVersion,
+    );
+
     print('✅ Fetched OpenAPI specification');
     print('   Title: ${spec.info.title}');
     print('   Version: ${spec.info.version}');
@@ -96,12 +101,29 @@ void main(List<String> arguments) async {
       spec,
       config.classNamingConvention,
       config.propertyNamingConvention,
+      formatter,
     );
     final generatedModelResult = modelBuilder.generateModels();
     final models = generatedModelResult.models;
     final serviceModels = generatedModelResult.serviceModels;
 
     print('✅ Generated ${models.length} model classes');
+    print('');
+
+    // Generate services
+    print('🔨 Generating SDK services...');
+    final serviceBuilder = ServiceBuilder(
+      spec,
+      config.classNamingConvention,
+      config.propertyNamingConvention,
+      modelBuilder.schemaNameMap,
+      formatter,
+      config.packageName,
+    );
+    final generatedServiceResult = serviceBuilder.generateServices();
+    final services = generatedServiceResult.services;
+
+    print('✅ Generated ${services.length} service classes');
     print('');
 
     // Determine output directory
@@ -112,8 +134,12 @@ void main(List<String> arguments) async {
     final serviceOutputDirectory = Directory(
       path.join(currentDir.path, outputDir, 'service/result'),
     );
+    final serviceClassOutputDirectory = Directory(
+      path.join(currentDir.path, outputDir, 'service'),
+    );
     await modelOutputDirectory.create(recursive: true);
     await serviceOutputDirectory.create(recursive: true);
+    await serviceClassOutputDirectory.create(recursive: true);
     // Write model files
     print('📝 Writing model files...');
     for (final entry in models.entries) {
@@ -129,6 +155,21 @@ void main(List<String> arguments) async {
       final file = File(path.join(serviceOutputDirectory.path, fileName));
       await file.writeAsString(content.code);
     }
+
+    // Write service files
+    print('📝 Writing service files...');
+    for (final entry in services.entries) {
+      final fileName = entry.value.fileName;
+      final content = entry.value;
+      final file = File(path.join(serviceClassOutputDirectory.path, fileName));
+      await file.writeAsString(content.code);
+    }
+
+    final serviceClass = generatedServiceResult.serviceClass;
+    final serviceClassFile = File(
+      path.join(serviceClassOutputDirectory.path, serviceClass.fileName),
+    );
+    await serviceClassFile.writeAsString(serviceClass.code);
 
     // Generate models.dart export file
     if (models.isNotEmpty) {
@@ -169,7 +210,28 @@ void main(List<String> arguments) async {
         path.join(serviceOutputDirectory.path, 'index.dart'),
       );
       await exportFile.writeAsString(exportBuffer.toString());
-      print('   ✓ models.dart');
+      print('   ✓ service/result/index.dart');
+    }
+
+    // Generate service/index.dart export file
+    if (services.isNotEmpty) {
+      final exportBuffer = StringBuffer();
+      exportBuffer.writeln('// GENERATED CODE - DO NOT MODIFY BY HAND');
+      exportBuffer.writeln('// Generated from OpenAPI specification');
+      exportBuffer.writeln('// Title: ${spec.info.title}');
+      exportBuffer.writeln('// Version: ${spec.info.version}');
+      exportBuffer.writeln('');
+
+      for (final key in services.keys) {
+        final exportName = services[key]!.fileName.replaceAll('.dart', '');
+        exportBuffer.writeln("export '$exportName.dart';");
+      }
+
+      final exportFile = File(
+        path.join(serviceClassOutputDirectory.path, 'index.dart'),
+      );
+      await exportFile.writeAsString(exportBuffer.toString());
+      print('   ✓ service/index.dart');
     }
 
     print('');
@@ -185,7 +247,7 @@ void main(List<String> arguments) async {
 class OpenApiSdkGeneratorConfig {
   final String? url;
   final String outputDirectory;
-  final String? packageName;
+  final String packageName;
   final NamingConvention classNamingConvention;
   final NamingConvention propertyNamingConvention;
 
@@ -217,7 +279,8 @@ class OpenApiSdkGeneratorConfig {
           results[OpenApiSdkGeneratorConfig.outputOption] as String? ??
           'lib/generated',
       packageName:
-          results[OpenApiSdkGeneratorConfig.packageNameOption] as String?,
+          results[OpenApiSdkGeneratorConfig.packageNameOption] as String? ??
+          'openapi_sdk',
       classNamingConvention: getNamingConvention(
         results[OpenApiSdkGeneratorConfig.classNamingConventionOption]
                 as String? ??

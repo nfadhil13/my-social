@@ -10,16 +10,15 @@ class ModelBuilder {
   final NamingConvention schemaNamingConvention;
   final NamingConvention propertyNamingConvention;
   final Map<String, String> schemaNameMap = {};
+  final DartFormatter formatter;
 
-  DartFormatter get _formatter {
-    // Lazy initialization to avoid languageVersion requirement during construction
-    return DartFormatter(languageVersion: DartFormatter.latestLanguageVersion);
-  }
+  DartFormatter get _formatter => formatter;
 
   ModelBuilder(
     this.spec,
     this.schemaNamingConvention,
     this.propertyNamingConvention,
+    this.formatter,
   );
 
   /// Generate all model classes from the OpenAPI specification
@@ -94,7 +93,7 @@ class ModelBuilder {
           final allOf = content['application/json']!.schema?.allOf;
           if (allOf == null || allOf.isEmpty) continue;
           final snakeCaseClassName =
-              '$operation${path.key.split("/").map((value) => value.toLowerCase()).join("_")}_api_response';
+              '${path.key.split("/").skip(1).map((value) => value.toLowerCase()).join("_")}_${operation}_api_response';
           final dartClassName = NamingUtils.toPascalCase(
             snakeCaseClassName,
             from: NamingConvention.snakeCase,

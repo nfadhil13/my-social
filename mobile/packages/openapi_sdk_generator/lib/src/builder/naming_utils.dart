@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:openapi_sdk_generator/src/naming_conventions.dart';
 
 abstract class NamingUtils {
@@ -86,10 +88,19 @@ class _CamelCaseNamingUtils extends NamingUtils {
   String fromSnakeCase(String str) {
     // Convert snake_case to camelCase
     if (str.isEmpty) return str;
-    return str.split('_').map((part) {
-      if (part.isEmpty) return '';
-      return part[0].toLowerCase() + part.substring(1).toLowerCase();
-    }).join();
+    final sections = str.split('_');
+    final result = <String>[];
+    bool isFirst = true;
+    for (final section in sections) {
+      if (section.isEmpty) return '';
+      String item = section;
+      if (!isFirst) {
+        item = item[0].toUpperCase() + item.substring(1).toLowerCase();
+      }
+      result.add(item);
+      isFirst = false;
+    }
+    return result.join('');
   }
 }
 
