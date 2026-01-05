@@ -1,11 +1,12 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'openapi_source.dart';
-import 'models/models.dart';
 
-/// Network-based OpenAPI specification source
-/// Fetches the specification from a URL (localhost or remote) and parses it as JSON
+/// Abstract class for OpenAPI specification sources
+sealed class OpenApiSource {
+  // Returns the OpenAPI specification json string
+  Future<String> getSpesificationAsString();
+}
+
 class OpenApiNetworkSource implements OpenApiSource {
   /// The URL to fetch the OpenAPI specification from
   final String url;
@@ -16,11 +17,14 @@ class OpenApiNetworkSource implements OpenApiSource {
   /// Optional timeout in seconds (default: 30)
   final int timeoutSeconds;
 
-  OpenApiNetworkSource(this.url, {this.headers, this.timeoutSeconds = 30})
-    : assert(url.isNotEmpty, 'URL cannot be empty');
+  OpenApiNetworkSource({
+    required this.url,
+    this.headers,
+    this.timeoutSeconds = 30,
+  });
 
   @override
-  Future<OpenApiSpec> getSpecification() async {
+  Future<String> getSpesificationAsString() async {
     try {
       final uri = Uri.parse(url);
       final request = http.Request('GET', uri);
@@ -37,8 +41,7 @@ class OpenApiNetworkSource implements OpenApiSource {
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         try {
-          final jsonMap = json.decode(response.body) as Map<String, dynamic>;
-          return OpenApiSpec.fromJson(jsonMap);
+          return response.body;
         } catch (e) {
           throw Exception('Failed to parse OpenAPI specification as JSON: $e');
         }
@@ -56,6 +59,24 @@ class OpenApiNetworkSource implements OpenApiSource {
       );
     } catch (e) {
       throw Exception('Error fetching OpenAPI specification from $url: $e');
+    }
+  }
+}
+
+class OpenApiFileSource implements OpenApiSource {
+  final String filePath;
+
+  OpenApiFileSource({required this.filePath});
+
+  @override
+  Future<String> getSpesificationAsString() async {
+    try {
+      final file = File(filePath);
+      return file.readAsString();
+    } catch (e) {
+      throw Exception(
+        'Failed to read OpenAPI specification from $filePath: $e',
+      );
     }
   }
 }

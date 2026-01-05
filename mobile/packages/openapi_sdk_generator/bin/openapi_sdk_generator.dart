@@ -2,295 +2,170 @@
 
 import 'dart:io';
 import 'package:args/args.dart';
-import 'package:dart_style/dart_style.dart';
-import 'package:path/path.dart' as path;
 import 'package:openapi_sdk_generator/openapi_sdk_generator.dart';
+import 'package:openapi_sdk_generator/src/runner/generate.dart';
+import 'package:openapi_sdk_generator/src/runner/help.dart';
+import 'package:openapi_sdk_generator/src/utils/log.dart' as log;
 
+/// Determines what the runner will do
+enum GeneratorMode {
+  generate, // default
+}
+
+/// To run this:
+/// -> dart run openapi_sdk_generator generate <url/file>
+///
+/// Generates Flutter/Dart SDK from OpenAPI specification.
 void main(List<String> arguments) async {
-  try {
-    final parser = ArgParser()
-      ..addOption(
-        OpenApiSdkGeneratorConfig.urlOption,
-        abbr: 'u',
-        help: 'OpenAPI specification URL',
-      )
-      ..addOption(
-        OpenApiSdkGeneratorConfig.outputOption,
-        abbr: 'o',
-        help: 'Output directory for generated SDK',
-        defaultsTo: 'lib/generated',
-      )
-      ..addOption(
-        OpenApiSdkGeneratorConfig.classNamingConventionOption,
-        abbr: 'c',
-        help: 'Schema naming convention',
-        defaultsTo: NamingConvention.pascalCase.name,
-      )
-      ..addOption(
-        OpenApiSdkGeneratorConfig.propertyNamingConventionOption,
-        abbr: 'f',
-        help: 'Property naming convention',
-        defaultsTo: NamingConvention.camelCase.name,
-      )
-      ..addOption(
-        OpenApiSdkGeneratorConfig.packageNameOption,
-        abbr: 'p',
-        defaultsTo: 'openapi_sdk',
-        help: 'Package name for generated SDK',
-      )
-      ..addFlag(
-        'help',
-        abbr: 'h',
-        negatable: false,
-        help: 'Show this help message',
-      );
+  GeneratorMode mode;
+  log.Level logLevel = log.Level.normal;
 
-    final results = parser.parse(arguments);
-
-    if (results['help'] as bool) {
-      print('OpenAPI SDK Generator');
-      print('');
-      print('Usage:');
-      print('  dart run openapi_sdk_generator [options]');
-      print('');
-      print('Options:');
-      print(parser.usage);
-      exit(0);
+  if (arguments.isNotEmpty) {
+    if (const {'-h', '--help', 'help'}.contains(arguments[0])) {
+      printHelp();
+      return;
     }
 
-    late OpenApiSdkGeneratorConfig config;
+    switch (arguments[0]) {
+      case 'generate':
+        mode = GeneratorMode.generate;
+        break;
+      default:
+        mode = GeneratorMode.generate;
+    }
+
+    // Check for verbose flag
+    for (final arg in arguments) {
+      if (arg == '-v' || arg == '--verbose') {
+        logLevel = log.Level.verbose;
+      }
+    }
+  } else {
+    mode = GeneratorMode.generate;
+  }
+
+  log.setLevel(logLevel);
+
+  switch (mode) {
+    case GeneratorMode.generate:
+      log.info('Generating SDK...\n');
+      break;
+  }
+
+  final stopwatch = Stopwatch()..start();
+
+  // Parse arguments and create config
+  late OpenApiSdkGeneratorConfig config;
+  String? urlOrFile;
+  try {
+    final parser = _createArgumentParser();
+    final filteredArguments = mode == GeneratorMode.generate
+        ? arguments.skip(1).toList()
+        : arguments;
+    final results = parser.parse(filteredArguments);
+
+    // Check for verbose flag from parsed results
+    if (results['verbose'] as bool) {
+      logLevel = log.Level.verbose;
+      log.setLevel(logLevel);
+    }
+
+    // Get URL/file from positional arguments
+    if (mode == GeneratorMode.generate) {
+      final rest = results.rest;
+      if (rest.isEmpty) {
+        log.error('Error: URL or file path is required.');
+        log.error('Usage: openapi_sdk_generator generate <url/file> [options]');
+        exit(1);
+      }
+      urlOrFile = rest[0];
+    }
 
     try {
-      config = OpenApiSdkGeneratorConfig.fromParser(results);
+      config = OpenApiSdkGeneratorConfig.fromParser(results, urlOrFile);
     } catch (e, stackTrace) {
-      print('Error: $e');
-      print(stackTrace);
+      log.error('Error: $e');
+      if (logLevel == log.Level.verbose) {
+        log.error(stackTrace.toString());
+      }
       exit(1);
     }
-
-    final url = config.url;
-    if (url == null || url.isEmpty) {
-      print(
-        'Error: URL is required. Provide --url or configure in pubspec.yaml',
-      );
-      exit(1);
-    }
-
-    final outputDir = config.outputDirectory;
-
-    print('🚀 OpenAPI SDK Generator');
-    print('');
-    print('📡 Fetching OpenAPI specification from: $url');
-
-    // Create source and fetch spec
-    final source = OpenApiNetworkSource(url);
-    final spec = await source.getSpecification();
-
-    final formatter = DartFormatter(
-      languageVersion: DartFormatter.latestLanguageVersion,
-    );
-
-    print('✅ Fetched OpenAPI specification');
-    print('   Title: ${spec.info.title}');
-    print('   Version: ${spec.info.version}');
-    print('');
-
-    // Generate models
-    print('🔨 Generating SDK models...');
-    final modelBuilder = ModelBuilder(
-      spec,
-      config.classNamingConvention,
-      config.propertyNamingConvention,
-      formatter,
-    );
-    final generatedModelResult = modelBuilder.generateModels();
-    final models = generatedModelResult.models;
-    final serviceModels = generatedModelResult.serviceModels;
-
-    print('✅ Generated ${models.length} model classes');
-    print('');
-
-    // Generate services
-    print('🔨 Generating SDK services...');
-    final serviceBuilder = ServiceBuilder(
-      spec,
-      config.classNamingConvention,
-      config.propertyNamingConvention,
-      modelBuilder.schemaNameMap,
-      formatter,
-      config.packageName,
-    );
-    final generatedServiceResult = serviceBuilder.generateServices();
-    final services = generatedServiceResult.services;
-
-    print('✅ Generated ${services.length} service classes');
-    print('');
-
-    // Determine output directory
-    final currentDir = Directory.current;
-    final modelOutputDirectory = Directory(
-      path.join(currentDir.path, outputDir, 'models'),
-    );
-    final serviceOutputDirectory = Directory(
-      path.join(currentDir.path, outputDir, 'service/result'),
-    );
-    final serviceClassOutputDirectory = Directory(
-      path.join(currentDir.path, outputDir, 'service'),
-    );
-    await modelOutputDirectory.create(recursive: true);
-    await serviceOutputDirectory.create(recursive: true);
-    await serviceClassOutputDirectory.create(recursive: true);
-    // Write model files
-    print('📝 Writing model files...');
-    for (final entry in models.entries) {
-      final fileName = entry.value.fileName;
-      final content = entry.value;
-      final file = File(path.join(modelOutputDirectory.path, fileName));
-      await file.writeAsString(content.code);
-    }
-
-    for (final entry in generatedModelResult.serviceModels.entries) {
-      final fileName = entry.value.fileName;
-      final content = entry.value;
-      final file = File(path.join(serviceOutputDirectory.path, fileName));
-      await file.writeAsString(content.code);
-    }
-
-    // Write service files
-    print('📝 Writing service files...');
-    for (final entry in services.entries) {
-      final fileName = entry.value.fileName;
-      final content = entry.value;
-      final file = File(path.join(serviceClassOutputDirectory.path, fileName));
-      await file.writeAsString(content.code);
-    }
-
-    final serviceClass = generatedServiceResult.serviceClass;
-    final serviceClassFile = File(
-      path.join(serviceClassOutputDirectory.path, serviceClass.fileName),
-    );
-    await serviceClassFile.writeAsString(serviceClass.code);
-
-    // Generate models.dart export file
-    if (models.isNotEmpty) {
-      final exportBuffer = StringBuffer();
-      exportBuffer.writeln('// GENERATED CODE - DO NOT MODIFY BY HAND');
-      exportBuffer.writeln('// Generated from OpenAPI specification');
-      exportBuffer.writeln('// Title: ${spec.info.title}');
-      exportBuffer.writeln('// Version: ${spec.info.version}');
-      exportBuffer.writeln('');
-
-      for (final key in models.keys) {
-        final exportName = models[key]!.fileName.replaceAll('.dart', '');
-        exportBuffer.writeln("export '$exportName.dart';");
-      }
-
-      final exportFile = File(
-        path.join(modelOutputDirectory.path, 'index.dart'),
-      );
-      await exportFile.writeAsString(exportBuffer.toString());
-      print('   ✓ models.dart');
-    }
-
-    // Generate service/result.dart export file
-    if (serviceModels.isNotEmpty) {
-      final exportBuffer = StringBuffer();
-      exportBuffer.writeln('// GENERATED CODE - DO NOT MODIFY BY HAND');
-      exportBuffer.writeln('// Generated from OpenAPI specification');
-      exportBuffer.writeln('// Title: ${spec.info.title}');
-      exportBuffer.writeln('// Version: ${spec.info.version}');
-      exportBuffer.writeln('');
-
-      for (final key in serviceModels.keys) {
-        final exportName = serviceModels[key]!.fileName.replaceAll('.dart', '');
-        exportBuffer.writeln("export '$exportName.dart';");
-      }
-
-      final exportFile = File(
-        path.join(serviceOutputDirectory.path, 'index.dart'),
-      );
-      await exportFile.writeAsString(exportBuffer.toString());
-      print('   ✓ service/result/index.dart');
-    }
-
-    // Generate service/index.dart export file
-    if (services.isNotEmpty) {
-      final exportBuffer = StringBuffer();
-      exportBuffer.writeln('// GENERATED CODE - DO NOT MODIFY BY HAND');
-      exportBuffer.writeln('// Generated from OpenAPI specification');
-      exportBuffer.writeln('// Title: ${spec.info.title}');
-      exportBuffer.writeln('// Version: ${spec.info.version}');
-      exportBuffer.writeln('');
-
-      for (final key in services.keys) {
-        final exportName = services[key]!.fileName.replaceAll('.dart', '');
-        exportBuffer.writeln("export '$exportName.dart';");
-      }
-
-      final exportFile = File(
-        path.join(serviceClassOutputDirectory.path, 'index.dart'),
-      );
-      await exportFile.writeAsString(exportBuffer.toString());
-      print('   ✓ service/index.dart');
-    }
-
-    print('');
-    print('✨ SDK generation complete!');
-    print('   Output: ${modelOutputDirectory.path}');
   } catch (e, stackTrace) {
-    print(e);
-    print(stackTrace);
+    log.error('Error parsing arguments: $e');
+    if (logLevel == log.Level.verbose) {
+      log.error(stackTrace.toString());
+    }
     exit(1);
+  }
+
+  // Route to appropriate handler
+  switch (mode) {
+    case GeneratorMode.generate:
+      try {
+        await runGenerateSdk(config);
+        if (logLevel == log.Level.verbose) {
+          log.verbose('\nGeneration done. (${stopwatch.elapsed})');
+        }
+      } catch (e, stackTrace) {
+        log.error('Error: $e');
+        if (logLevel == log.Level.verbose) {
+          log.error(stackTrace.toString());
+        }
+        exit(1);
+      }
+      break;
   }
 }
 
-class OpenApiSdkGeneratorConfig {
-  final String? url;
-  final String outputDirectory;
-  final String packageName;
-  final NamingConvention classNamingConvention;
-  final NamingConvention propertyNamingConvention;
-
-  OpenApiSdkGeneratorConfig({
-    required this.url,
-    required this.outputDirectory,
-    required this.packageName,
-    required this.classNamingConvention,
-    required this.propertyNamingConvention,
-  });
-
-  static const urlOption = 'url';
-  static const outputOption = 'output';
-  static const packageNameOption = 'package_name';
-  static const classNamingConventionOption = 'class_naming_convention';
-  static const propertyNamingConventionOption = 'property_naming_convention';
-
-  static NamingConvention getNamingConvention(String? name) {
-    if (name == null) {
-      return NamingConvention.pascalCase;
-    }
-    return NamingConvention.values.firstWhere((e) => e.name == name);
-  }
-
-  factory OpenApiSdkGeneratorConfig.fromParser(ArgResults results) {
-    return OpenApiSdkGeneratorConfig(
-      url: results[OpenApiSdkGeneratorConfig.urlOption] as String?,
-      outputDirectory:
-          results[OpenApiSdkGeneratorConfig.outputOption] as String? ??
-          'lib/generated',
-      packageName:
-          results[OpenApiSdkGeneratorConfig.packageNameOption] as String? ??
-          'openapi_sdk',
-      classNamingConvention: getNamingConvention(
-        results[OpenApiSdkGeneratorConfig.classNamingConventionOption]
-                as String? ??
-            NamingConvention.pascalCase.name,
-      ),
-      propertyNamingConvention: getNamingConvention(
-        results[OpenApiSdkGeneratorConfig.propertyNamingConventionOption]
-                as String? ??
-            NamingConvention.camelCase.name,
-      ),
+/// Creates and configures the argument parser
+ArgParser _createArgumentParser() {
+  return ArgParser()
+    ..addOption(
+      OpenApiSdkGeneratorConfig.outputOption,
+      abbr: 'o',
+      help: 'Output directory for generated SDK',
+      defaultsTo: 'lib/generated',
+    )
+    ..addOption(
+      OpenApiSdkGeneratorConfig.classNamingConventionOption,
+      abbr: 'c',
+      help: 'Schema naming convention',
+      defaultsTo: NamingConvention.pascalCase.name,
+    )
+    ..addOption(
+      OpenApiSdkGeneratorConfig.propertyNamingConventionOption,
+      abbr: 'f',
+      help: 'Property naming convention',
+      defaultsTo: NamingConvention.camelCase.name,
+    )
+    ..addOption(
+      OpenApiSdkGeneratorConfig.packageNameOption,
+      abbr: 'p',
+      defaultsTo: 'openapi_sdk',
+      help: 'Package name for generated SDK',
+    )
+    ..addOption(
+      OpenApiSdkGeneratorConfig.inputTypeOption,
+      abbr: 't',
+      help:
+          'Input type: json or yaml (auto-detected from file extension if not specified)',
+      allowed: ['json', 'yaml'],
+    )
+    ..addOption(
+      OpenApiSdkGeneratorConfig.timeoutOption,
+      help: 'Timeout in seconds for fetching OpenAPI specification',
+      defaultsTo: '30',
+    )
+    ..addFlag(
+      'help',
+      abbr: 'h',
+      negatable: false,
+      help: 'Show this help message',
+    )
+    ..addFlag(
+      'verbose',
+      abbr: 'v',
+      negatable: false,
+      help: 'Enable verbose logging',
     );
-  }
 }
